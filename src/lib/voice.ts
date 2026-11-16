@@ -75,8 +75,12 @@ export function useSpeechInput(onFinal: (text: string) => void) {
       setActivity("mic", null);
     };
     recRef.current = rec;
-    rec.start();
-    setListening(true);
+    try {
+      rec.start();
+      setListening(true);
+    } catch {
+      setError("Não foi possível iniciar o microfone. Verifique a permissão e tente novamente.");
+    }
     setActivity("mic", "ouvindo");
   }, []);
 
