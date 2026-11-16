@@ -15,9 +15,12 @@ import { useAuth } from "@/lib/auth";
 import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { Clock } from "./Clock";
+import { AudioLines, Pause, Play } from "lucide-react";
+import { currentTrackTitle, playerStore, controlHudPlayer } from "@/lib/hud-player";
 
 export function Header({ onOpenNav }: { onOpenNav: () => void }) {
   const prefs = prefsStore.useValue();
+  const player = playerStore.useValue();
   const notices = noticesStore.useValue();
   const unread = notices.filter((n) => !n.read).length;
   const { user, isAdmin, signOut } = useAuth();
@@ -42,6 +45,21 @@ export function Header({ onOpenNav }: { onOpenNav: () => void }) {
       </p>
 
       <div className="ml-auto flex items-center gap-2 sm:gap-4">
+
+        <div className="hidden items-center gap-2 rounded-full border border-vio/30 bg-vio/10 px-2 py-1.5 md:flex" title="Player ambiente da TUNAVI">
+          <AudioLines className={cn("h-4 w-4 text-lav", player.playing && "animate-pulse")} />
+          <div className="hidden min-w-[88px] xl:block">
+            <p className="font-mono text-[9px] uppercase tracking-wider text-lav/80">{currentTrackTitle(player)}</p>
+            <div className="mt-1 flex h-2 items-center gap-[2px]">
+              {Array.from({length:12},(_,i)=><span key={i} className="w-[2px] rounded-full bg-lav/80" style={{height:player.playing?`${3+(i*7)%8}px`:"3px",animation:player.playing?`holo-bar ${.35+(i%4)*.12}s ease-in-out infinite`:undefined}}/>)}
+            </div>
+          </div>
+          <select aria-label="Estilo de áudio" value={player.style} onChange={(e)=>void controlHudPlayer({acao:"tocar",estilo:e.target.value as typeof player.style})} className="max-w-[88px] bg-transparent text-[10px] text-lav outline-none">
+            <option className="bg-ink" value="foco_lofi">Lo-Fi</option><option className="bg-ink" value="synthwave">Synthwave</option><option className="bg-ink" value="cyber_ambient">Cyber</option><option className="bg-ink" value="chuva_estudio">Chuva</option>
+          </select>
+          <button type="button" aria-label={player.playing?"Pausar áudio":"Tocar áudio"} onClick={()=>void controlHudPlayer({acao:player.playing?"pausar":"tocar"})} className="grid h-6 w-6 place-items-center rounded-full text-lav hover:bg-lav/10">{player.playing?<Pause className="h-3.5 w-3.5"/>:<Play className="h-3.5 w-3.5"/>}</button>
+        </div>
+
         <button
           type="button"
           onClick={() => {
