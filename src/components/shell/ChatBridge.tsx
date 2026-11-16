@@ -1,17 +1,81 @@
 import { useEffect, useRef } from "react";
+import { useNavigate } from "@tanstack/react-router";
 import { useChat } from "@ai-sdk/react";
 import { toast } from "sonner";
 import { getChat, messageText, saveMessages } from "@/lib/chat-client";
 import { setActivity } from "@/lib/assistant";
-import { logActivity, prefsStore } from "@/lib/data";
+import { logActivity, prefsStore, reportsStore, tasksStore } from "@/lib/data";
+import { uid } from "@/lib/persisted";
+import { controlHudPlayer } from "@/lib/hud-player";
 import { playSound } from "@/lib/sound";
 import { speak } from "@/lib/voice";
 import { readErrorMessage } from "@/lib/ai-context";
 
 /** Keeps the shared conversation saved and mirrors its status in the hologram. */
 export function ChatBridge() {
-  const { messages, status, error } = useChat({ chat: getChat() });
+  const navigate = useNavigate();
+  const { messages, status, error, addToolOutput } = useChat({ chat: getChat() });
+  const handledTools = useRef(new Set<string>());
   const prev = useRef(status);
+
+
+  useEffect(() => {
+    for (const message of messages) {
+      if (message.role !== "assistant") continue;
+      for (const rawPart of message.parts) {
+        const part = rawPart as unknown as { type?: string; state?: string; toolCallId?: string; input?: Record<string, unknown> };
+        if (!part.type?.startsWith("tool-") || part.state !== "input-available" || !part.toolCallId || !part.input) continue;
+        if (handledTools.current.has(part.toolCallId)) continue;
+        handledTools.current.add(part.toolCallId);
+        const name = part.type.slice(5);
+        const input = part.input;
+        void (async () => {
+          try {
+            let output: Record<string, unknown> = { ok: true };
+            if (name === "navegar_modulo") {
+              const paths: Record<string, string> = { dashboard:"/", "meu-espaco":"/meu-espaco", projetos:"/projetos", tarefas:"/tarefas", pesquisa:"/pesquisa", criador:"/criador", agentes:"/agentes", memoria:"/memoria", voz:"/voz", integracoes:"/integracoes", desktop:"/desktop", seguranca:"/seguranca", configuracoes:"/configuracoes", "super-painel":"/super-painel" };
+              const path = paths[String(input.modulo)];
+              if (!path) throw new Error("Módulo não reconhecido.");
+              await navigate({ to: path as never });
+              output = { ok:true, modulo:input.modulo, path };
+              toast.success("Abrindo " + String(input.modulo).replaceAll("-", " ") + ".");
+            } else if (name === "abrir_aba_externa") {
+              const url = new URL(String(input.url));
+              if (!["https:","http:"].includes(url.protocol)) throw new Error("Somente links HTTP ou HTTPS são permitidos.");
+              const opened = window.open(url.toString(), "_blank", "noopener,noreferrer");
+              if (!opened) throw new Error("O navegador bloqueou a nova aba.");
+              output = { ok:true, url:url.toString(), titulo:input.titulo };
+              toast.success("Link aberto em nova aba.");
+            } else if (name === "gerar_relatorio") {
+              const metrics = Array.isArray(input.metricas) ? input.metricas as {label:string;valor:string}[] : [];
+              const content = [String(input.resumo), ...metrics.map((m) => `- **${m.label}:** ${m.valor}`), String(input.conteudo_markdown)].join("\n\n");
+              const id = uid();
+              reportsStore.set((prev) => [{ id, topic:String(input.titulo), content, createdAt:Date.now() }, ...prev]);
+              output = { ok:true, id, titulo:input.titulo, categoria:input.categoria };
+              toast.success("Relatório registrado com sucesso.");
+            } else if (name === "adicionar_tarefa") {
+              const id = uid();
+              tasksStore.set((prev) => [{ id, title:String(input.titulo), status:"todo", priority:input.prioridade as "baixa"|"media"|"alta", due:String(input.prazo || ""), createdAt:Date.now() }, ...prev]);
+              logActivity("Tarefa criada pela TUNAVI: " + String(input.titulo));
+              output = { ok:true, id, titulo:input.titulo, prioridade:input.prioridade, prazo:input.prazo };
+              toast.success("Tarefa adicionada ao Dashboard.");
+            } else if (name === "controlar_player_hud") {
+              await controlHudPlayer(input as {acao:"tocar"|"pausar"|"proxima"|"anterior"|"volume";estilo?:"foco_lofi"|"synthwave"|"cyber_ambient"|"chuva_estudio";volume?:number});
+              output = { ok:true, player:"atualizado", ...input };
+              toast.success("Player do HUD atualizado.");
+            } else {
+              throw new Error("Ferramenta não disponível.");
+            }
+            addToolOutput({ tool: name, toolCallId: part.toolCallId!, output });
+          } catch (err) {
+            const message = err instanceof Error ? err.message : "Não foi possível executar a ação.";
+            toast.error(message);
+            addToolOutput({ tool: name, toolCallId: part.toolCallId!, output: { ok:false, error:message } });
+          }
+        })();
+      }
+    }
+  }, [messages, navigate, addToolOutput]);
 
   useEffect(() => {
     setActivity("chat", status === "submitted" ? "processando" : status === "streaming" ? "respondendo" : null);
