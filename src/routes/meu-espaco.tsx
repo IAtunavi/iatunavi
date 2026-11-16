@@ -1,27 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { GlassCard, PageContainer } from "@/components/hud/primitives";
+import { ModuleGate } from "@/components/hud/primitives";
+import { ModuleWorkspace } from "@/components/modules/ModuleWorkspace";
 
 export const Route = createFileRoute("/meu-espaco")({
-  head: () => ({
-    meta: [
-      { title: "Meu espaço — TUNAVI" },
-      { name: "description", content: "Meu espaço na plataforma TUNAVI." },
-      { property: "og:title", content: "Meu espaço — TUNAVI" },
-      { property: "og:description", content: "Meu espaço na plataforma TUNAVI." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
+  head: () => ({ meta: [{ title: "Meu espaço — TUNAVI" }, { name: "description", content: "Meu espaço na plataforma TUNAVI." }] }),
   component: Page,
 });
 
 function Page() {
-  return (
-    <PageContainer>
-      <GlassCard className="mx-auto mt-10 max-w-lg text-center">
-        <h1 className="text-xl font-semibold text-lav">Meu espaço</h1>
-        <p className="mt-2 text-[13px] text-lav/55">Esta tela ainda está sendo construída.</p>
-      </GlassCard>
-    </PageContainer>
-  );
+  return <ModuleGate module="meu-espaco"><ModuleWorkspace section="meu-espaco" /></ModuleGate>;
 }
