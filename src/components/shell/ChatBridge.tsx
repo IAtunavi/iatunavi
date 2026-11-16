@@ -42,10 +42,8 @@ export function ChatBridge() {
             } else if (name === "abrir_aba_externa") {
               const url = new URL(String(input.url));
               if (!["https:","http:"].includes(url.protocol)) throw new Error("Somente links HTTP ou HTTPS são permitidos.");
-              const opened = window.open(url.toString(), "_blank", "noopener,noreferrer");
-              if (!opened) throw new Error("O navegador bloqueou a nova aba.");
-              output = { ok:true, url:url.toString(), titulo:input.titulo };
-              toast.success("Link aberto em nova aba.");
+              output = { ok:true, url:url.toString(), titulo:input.titulo, requiresUserAction:true };
+              toast.info("Link preparado. Clique no cartão para abrir em nova aba.");
             } else if (name === "gerar_relatorio") {
               const metrics = Array.isArray(input.metricas) ? input.metricas as {label:string;valor:string}[] : [];
               const content = [String(input.resumo), ...metrics.map((m) => `- **${m.label}:** ${m.valor}`), String(input.conteudo_markdown)].join("\n\n");
@@ -60,9 +58,8 @@ export function ChatBridge() {
               output = { ok:true, id, titulo:input.titulo, prioridade:input.prioridade, prazo:input.prazo };
               toast.success("Tarefa adicionada ao Dashboard.");
             } else if (name === "controlar_player_hud") {
-              await controlHudPlayer(input as {acao:"tocar"|"pausar"|"proxima"|"anterior"|"volume";estilo?:"foco_lofi"|"synthwave"|"cyber_ambient"|"chuva_estudio";volume?:number});
-              output = { ok:true, player:"atualizado", ...input };
-              toast.success("Player do HUD atualizado.");
+              output = { ok:true, player:"pronto", requiresUserAction:true, ...input };
+              toast.info("Controle de áudio preparado. Clique no cartão para aplicar.");
             } else {
               throw new Error("Ferramenta não disponível.");
             }
