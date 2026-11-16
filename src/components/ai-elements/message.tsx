@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { reportsStore, tasksStore } from "@/lib/data";
-import { playerStore, controlHudPlayer } from "@/lib/hud-player";
+import { controlHudPlayer } from "@/lib/hud-player";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 import { ArrowUpRight, Clipboard, ExternalLink, FileText, ListTodo, Music2, Navigation } from "lucide-react";
