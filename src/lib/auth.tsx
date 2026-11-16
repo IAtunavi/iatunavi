@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { logActivity } from "@/lib/data";
 
 type AuthState = {
   user: User | null;
@@ -36,7 +37,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
       if (active) setLoading(false);
     };
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
+      if (event === "SIGNED_IN" && s?.user) logActivity("Acesso autenticado: " + (s.user.email ?? "conta"));
+      if (event === "SIGNED_OUT") logActivity("Sessão encerrada.");
       // Defer the role lookup so it never runs inside the auth callback.
       setTimeout(() => void apply(s), 0);
     });
