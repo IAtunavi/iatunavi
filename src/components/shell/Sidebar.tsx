@@ -63,7 +63,7 @@ export function SidebarNav({ collapsed = false, onNavigate }: { collapsed?: bool
             {!collapsed && <span>Super Painel</span>}
           </Link>
         )}
-        <NavItem m={settings} collapsed={collapsed} current={current} onNavigate={onNavigate} />
+        {isModuleEnabled(data, settings.key) && <NavItem m={settings} collapsed={collapsed} current={current} onNavigate={onNavigate} />}
       </div>
     </nav>
   );
