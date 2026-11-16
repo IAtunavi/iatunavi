@@ -6,7 +6,6 @@ import { getChat, messageText, saveMessages } from "@/lib/chat-client";
 import { setActivity } from "@/lib/assistant";
 import { logActivity, prefsStore, reportsStore, tasksStore } from "@/lib/data";
 import { uid } from "@/lib/persisted";
-import { controlHudPlayer } from "@/lib/hud-player";
 import { playSound } from "@/lib/sound";
 import { speak } from "@/lib/voice";
 import { readErrorMessage } from "@/lib/ai-context";
