@@ -34,9 +34,9 @@ function json(status: number, error: string) {
  * Shared gate for every AI endpoint: platform switches, module toggles and the
  * daily message limit set in the Super Painel. Returns settings or an error Response.
  */
-export async function gateAiRequest(request: Request, module: string) {
+export async function gateAiRequest(request: Request, module: string, requireProviderKey = true) {
   const apiKey = process.env['LOVABLE_API_KEY'];
-  if (!apiKey) return { error: json(500, "A IA ainda não está configurada no servidor.") };
+  if (requireProviderKey && !apiKey) return { error: json(500, "A IA ainda não está configurada no servidor.") };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin.from("app_settings").select("*").eq("id", 1).single();
@@ -76,7 +76,7 @@ export async function gateAiRequest(request: Request, module: string) {
     if (insertError) console.error("ai_usage insert failed", insertError.message);
   };
 
-  return { apiKey, settings, userId, recordUsage };
+  return { apiKey: apiKey ?? "", settings, userId, recordUsage };
 }
 
 export function buildInstructions(settings: { system_prompt: string }, ctx: ChatContext, extra?: string) {
