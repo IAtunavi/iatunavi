@@ -27,6 +27,7 @@ import { Route as TarefasRouteImport } from './routes/tarefas'
 import { Route as VozRouteImport } from './routes/voz'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiGenerateRouteImport } from './routes/api/generate'
+import { Route as ApiMediaRouteImport } from './routes/api/media'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -118,6 +119,11 @@ const ApiGenerateRoute = ApiGenerateRouteImport.update({
   path: '/api/generate',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMediaRoute = ApiMediaRouteImport.update({
+  id: '/api/media',
+  path: '/api/media',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -138,6 +144,7 @@ export interface FileRoutesByFullPath {
   '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/media': typeof ApiMediaRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -201,6 +208,7 @@ export interface FileRouteTypes {
     | '/voz'
     | '/api/chat'
     | '/api/generate'
+    | '/api/media'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -262,6 +270,7 @@ export interface RootRouteChildren {
   VozRoute: typeof VozRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateRoute: typeof ApiGenerateRoute
+  ApiMediaRoute: typeof ApiMediaRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -392,6 +401,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiGenerateRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/media': {
+      id: '/api/media'
+      path: '/api/media'
+      fullPath: '/api/media'
+      preLoaderRoute: typeof ApiMediaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -414,6 +430,7 @@ const rootRouteChildren: RootRouteChildren = {
   VozRoute: VozRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateRoute: ApiGenerateRoute,
+  ApiMediaRoute: ApiMediaRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
