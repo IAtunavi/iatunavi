@@ -16,7 +16,8 @@ import { uid } from "@/lib/persisted";
 import { playSound } from "@/lib/sound";
 import { MODULES } from "@/lib/modules";
 import { streamGenerate } from "@/lib/ai-context";
-import { useAuth } from "@/lib/auth";\nimport { getPreferredMaleVoice } from "@/lib/voice";
+import { useAuth } from "@/lib/auth";
+import { getPreferredMaleVoice } from "@/lib/voice";
 import {
   CardTitle, EmptyState, fieldClass, GlassCard, PageContainer, PageHeader,
   pillButton, primaryButton,
