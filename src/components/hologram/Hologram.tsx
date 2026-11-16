@@ -1,4 +1,3 @@
-import bust from "@/assets/tunavi-bust.jpg";
 import { cn } from "@/lib/utils";
 import { STATE_LABEL, useAssistantState, type AssistantState } from "@/lib/assistant";
 
@@ -85,9 +84,9 @@ export function Hologram({
           </div>
         )}
 
-        {/* Bust */}
+        {/* Wireframe face projection */}
         <div
-          className={cn("relative mt-2 h-[290px] w-[270px] overflow-hidden holo-mask bg-deep")}
+          className={cn("relative mt-2 h-[290px] w-[270px] overflow-hidden holo-mask")}
           style={{
             animation:
               state === "respondendo"
@@ -99,26 +98,62 @@ export function Hologram({
                     : "holo-breathe 5s ease-in-out infinite",
           }}
         >
-          <img
-            src={bust}
-            alt=""
-            width={1280}
-            height={960}
-            className="absolute inset-0 h-full w-full object-cover opacity-90 mix-blend-luminosity"
-            style={{ objectPosition: "50% 38%", filter: "grayscale(1) contrast(1.25) brightness(1.1)" }}
-          />
-          <div className="absolute inset-0 mix-blend-color holo-tint" />
-          <div
-            className="absolute inset-0 mix-blend-screen"
-            style={{ background: "radial-gradient(50% 40% at 50% 35%, color-mix(in oklab, var(--vio) 34%, transparent), transparent)" }}
-          />
-          <div className="absolute inset-0 scanlines" />
-          {(state === "executando" || state === "processando") && (
-            <div
-              className="absolute inset-x-0 top-0 h-1/4 bg-gradient-to-b from-transparent via-lav/25 to-transparent"
-              style={{ animation: "holo-scan 1.8s linear infinite" }}
-            />
-          )}
+          <svg viewBox="0 0 270 290" className="absolute inset-0 h-full w-full" role="presentation" aria-hidden="true">
+            <defs>
+              <radialGradient id="holo-face-glow">
+                <stop offset="0%" stopColor="#c4b5fd" stopOpacity=".22" />
+                <stop offset="72%" stopColor="#8b5cf6" stopOpacity=".08" />
+                <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+              </radialGradient>
+              <linearGradient id="holo-face-line" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stopColor="#ddd6fe" stopOpacity=".95" />
+                <stop offset="52%" stopColor="#a78bfa" stopOpacity=".85" />
+                <stop offset="100%" stopColor="#7c3aed" stopOpacity=".65" />
+              </linearGradient>
+              <clipPath id="holo-face-clip">
+                <path d="M135 13 C83 13 52 48 52 105 L58 157 C62 205 91 239 135 250 C179 239 208 205 212 157 L218 105 C218 48 187 13 135 13Z" />
+              </clipPath>
+            </defs>
+            <ellipse cx="135" cy="140" rx="112" ry="132" fill="url(#holo-face-glow)" />
+            <g fill="none" stroke="url(#holo-face-line)" strokeLinecap="round" strokeLinejoin="round">
+              {/* Head silhouette, jaw and ears */}
+              <path strokeWidth="1.8" d="M135 13 C83 13 52 48 52 105 L58 157 C62 205 91 239 135 250 C179 239 208 205 212 157 L218 105 C218 48 187 13 135 13Z" />
+              <path strokeWidth="1.2" d="M52 119 C39 108 34 126 43 151 C47 164 53 168 60 164 M218 119 C231 108 236 126 227 151 C223 164 217 168 210 164" />
+              <path strokeWidth="1.4" d="M102 244 L92 278 M168 244 L178 278 M92 278 Q135 290 178 278" />
+              {/* Longitudinal wireframe meridians */}
+              <g clipPath="url(#holo-face-clip)" opacity=".82">
+                <path d="M135 12 C104 56 96 111 101 167 C105 205 119 235 135 251" />
+                <path d="M135 12 C166 56 174 111 169 167 C165 205 151 235 135 251" />
+                <path d="M80 35 C105 76 111 127 108 177 C106 207 117 232 135 251" />
+                <path d="M190 35 C165 76 159 127 162 177 C164 207 153 232 135 251" />
+                <path d="M55 92 Q135 63 215 92 M54 119 Q135 93 216 119 M56 147 Q135 124 214 147 M61 174 Q135 157 209 174 M72 199 Q135 187 198 199 M91 222 Q135 216 179 222" />
+                <path d="M66 65 Q135 84 204 65 M59 159 Q135 145 211 159" opacity=".55" />
+              </g>
+              {/* Brows and eyes */}
+              <path strokeWidth="2" d="M78 105 Q101 91 122 104 M148 104 Q169 91 192 105" />
+              <path strokeWidth="2.2" d="M82 122 Q101 111 121 122 Q102 136 82 122Z M149 122 Q169 111 188 122 Q168 136 149 122Z" />
+              <path strokeWidth="1.5" d="M101 118 L101 126 M169 118 L169 126" />
+              <circle cx="102" cy="122" r="3.4" fill="#ddd6fe" stroke="none" />
+              <circle cx="168" cy="122" r="3.4" fill="#ddd6fe" stroke="none" />
+              {/* Nose bridge and nostrils */}
+              <path strokeWidth="1.5" d="M135 116 L130 151 Q135 159 142 151 M121 162 Q135 168 149 162" />
+              {/* Cheek contours */}
+              <path strokeWidth="1" opacity=".75" d="M70 145 Q85 158 111 157 M159 157 Q185 158 200 145 M76 169 Q94 181 113 177 M157 177 Q176 181 194 169" />
+              {/* Mouth: opens and closes while speech synthesis is active */}
+              <path className={state === "respondendo" ? "holo-mouth-line" : ""} strokeWidth="1.8" d="M111 190 Q135 199 159 190" />
+              <ellipse className={state === "respondendo" ? "holo-mouth-open" : "holo-mouth-rest"} cx="135" cy="192" rx="13" ry="2.2" fill="#c4b5fd" fillOpacity=".18" stroke="#ddd6fe" strokeWidth="1.2" />
+              {/* Chin and neck topology */}
+              <path strokeWidth="1" d="M102 211 Q135 225 168 211 M112 228 Q135 236 158 228 M118 251 L135 270 L152 251" opacity=".8" />
+            </g>
+            <g fill="#ddd6fe">
+              <circle cx="135" cy="13" r="2" /><circle cx="52" cy="119" r="2" /><circle cx="218" cy="119" r="2" />
+              <circle cx="58" cy="157" r="1.6" /><circle cx="212" cy="157" r="1.6" />
+              <circle cx="135" cy="250" r="2" />
+            </g>
+          </svg>
+          <div className="pointer-events-none absolute inset-0 scanlines opacity-70" />
+          <div className="pointer-events-none absolute inset-0 mix-blend-screen" style={{ background: "radial-gradient(50% 40% at 50% 38%, color-mix(in oklab, var(--vio) 22%, transparent), transparent)" }} />
+          {state === "respondendo" && <div className="pointer-events-none absolute inset-x-8 top-0 h-1/3 bg-gradient-to-b from-transparent via-lav/20 to-transparent" style={{ animation: "holo-scan 1.8s linear infinite" }} />}
         </div>
 
         {/* Particles */}
