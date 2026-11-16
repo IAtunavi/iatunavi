@@ -15,7 +15,7 @@ import { agentById, AGENTS } from "@/lib/agents";
 import { prefsStore } from "@/lib/data";
 import { AI_MODELS, useAppSettings } from "@/lib/settings";
 import { playSound } from "@/lib/sound";
-import { speak, useSpeechInput } from "@/lib/voice";
+import { speak, stopSpeaking, useSpeechInput, useWakeWord } from "@/lib/voice";
 import { readErrorMessage } from "@/lib/ai-context";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +64,7 @@ function ChatPage() {
     setInput("");
   };
 
-  const mic = useSpeechInput((t) => submit(t));
+  const mic = useSpeechInput((t) => submit(t));\n  const wake = useWakeWord(() => {\n    toast.info("TUNAVI ativada. Pode falar.");\n    mic.start();\n  }, prefs.wakeWordEnabled && !busy);\n  const lastSpokenId = useRef<string | null>(null);\n\n  useEffect(() => {\n    if (!prefs.autoSpeak || busy || status !== "ready") return;\n    const last = messages[messages.length - 1];\n    if (!last || last.role !== "assistant" || last.id === lastSpokenId.current) return;\n    const text = messageText(last);\n    if (text.trim()) {\n      lastSpokenId.current = last.id;\n      speak(text);\n    }\n  }, [messages, status, busy, prefs.autoSpeak]);
 
   useEffect(() => {
     if (status === "ready" || status === "error") textareaRef.current?.focus();
@@ -83,7 +83,7 @@ function ChatPage() {
               </p>
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1">\n            <span className="hidden items-center gap-1 font-mono text-[9px] uppercase text-lav/45 sm:flex" aria-live="polite">{wake.listening ? "PALAVRA-CHAVE ATIVA" : prefs.wakeWordEnabled ? "MICROFONE INDISPONÍVEL" : ""}</span>\n            <button type="button" onClick={() => { stopSpeaking(); toast.info("Áudio interrompido."); }} className="grid h-8 w-8 place-items-center rounded-full text-lav/60 hover:bg-lav/10" aria-label="Interromper voz"><Volume2 className="h-4 w-4" /></button>
             {messages.length > 0 && (
               <button
                 type="button"
@@ -229,7 +229,7 @@ function ChatPage() {
               <PromptInputSubmit status={status} onStop={stop} disabled={!busy && !input.trim()} className="bg-vio text-primary-foreground hover:bg-vio/90" />
             </PromptInputFooter>
           </PromptInput>
-          {mic.error && <p className="mt-2 text-[12px] text-destructive">{mic.error}</p>}
+          {mic.error && <p className="mt-2 text-[12px] text-destructive">{mic.error}</p>}\n          {wake.error && <p className="mt-2 text-[12px] text-destructive">{wake.error}</p>}\n          <div className="mt-2 flex flex-wrap items-center justify-between gap-2 px-1">\n            <label className="flex items-center gap-2 text-[11px] text-lav/55">\n              <input type="checkbox" className="accent-violet-500" checked={prefs.autoSpeak} onChange={(e) => prefsStore.set((p) => ({ ...p, autoSpeak: e.target.checked }))} /> Responder falando\n            </label>\n            <label className="flex items-center gap-2 text-[11px] text-lav/55">\n              <input type="checkbox" className="accent-violet-500" checked={prefs.wakeWordEnabled} onChange={(e) => { if (e.target.checked && !wake.supported) { toast.error("Palavra-chave não suportada neste navegador."); return; } prefsStore.set((p) => ({ ...p, wakeWordEnabled: e.target.checked })); }} />\n              Ativar “Olá, Tunavi”\n            </label>\n          </div>\n          {prefs.wakeWordEnabled && <p className="mt-1 px-1 text-[10px] text-lav/35">A escuta funciona somente com esta página aberta e visível. O navegador pode processar o reconhecimento de fala; nenhuma gravação é enviada diretamente pela TUNAVI.</p>}
         </div>
       </section>
 
