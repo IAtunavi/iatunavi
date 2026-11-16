@@ -16,9 +16,9 @@ Visão geral, Conversar, Meu espaço, Projetos, Tarefas, Pesquisa e inteligênci
 
 ## Administração e autenticação
 
-O acesso de administrador é controlado pela tabela `user_roles` do Supabase. Crie ou promova a conta administrativa por um fluxo seguro no Supabase Dashboard ou por uma operação administrativa protegida. **Nunca armazene senhas, tokens privados ou chaves de serviço neste README, no frontend ou no histórico Git.**
+O acesso de administrador é controlado pela tabela `user_roles` do Supabase. A migração `supabase/migrations/20261116180000_master_admin.sql` promove a conta existente `tunavinetwork@gmail.com` para administradora se ela já estiver cadastrada no Supabase Auth. Se a conta ainda não existir ao aplicar a migração, crie e confirme a conta no Supabase Auth e execute a migração novamente. O cadastro público nunca concede privilégios administrativos. **Nunca armazene senhas, tokens privados ou chaves de serviço neste README, no frontend ou no histórico Git.**
 
-O Super Painel usa a sessão autenticada e verifica a função `admin` antes de exibir os controles. As políticas RLS do banco devem continuar sendo a autoridade final para cada operação.
+O Super Painel usa a sessão autenticada e verifica a função `admin` antes de exibir os controles. Os endpoints de IA exigem sessão válida e aplicam o limite diário por usuário. As políticas RLS do banco devem continuar sendo a autoridade final para cada operação.
 
 ## Ambiente
 
