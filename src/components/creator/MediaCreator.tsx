@@ -21,12 +21,15 @@ function loadHistory(): SavedMedia[] {
   } catch { return []; }
 }
 
-async function readApi<T extends ApiError>(response: Response): Promise<T> {
+async function readApi<T extends object>(response: Response): Promise<T> {
   const raw = await response.text();
   let data: T;
   try { data = (raw ? JSON.parse(raw) : {}) as T; }
   catch { throw new Error("O servidor retornou uma resposta inválida. Tente novamente."); }
-  if (!response.ok) throw new Error(data.error || `Erro no servidor (${response.status}).`);
+  if (!response.ok) {
+    const message = (data as T & ApiError).error;
+    throw new Error(message || `Erro no servidor (${response.status}).`);
+  }
   return data;
 }
 
@@ -69,7 +72,7 @@ export function MediaCreator() {
     const mediaType = tab === "imagem" ? "image" : "video";
     try {
       const headers = { "content-type": "application/json", ...(await authHeaders()) };
-      const post = async <T extends ApiError>(payload: object) => {
+      const post = async <T extends object>(payload: object) => {
         const response = await fetch("/api/media", { method: "POST", headers, body: JSON.stringify(payload) });
         return readApi<T>(response);
       };
