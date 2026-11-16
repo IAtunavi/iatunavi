@@ -16,7 +16,7 @@ import { reportsStore, tasksStore } from "@/lib/data";
 import { playerStore, controlHudPlayer } from "@/lib/hud-player";
 import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
-import { ArrowUpRight, CheckCircle2, Clipboard, FileText, ListTodo, Music2, Navigation } from "lucide-react";
+import { ArrowUpRight, Clipboard, ExternalLink, FileText, ListTodo, Music2, Navigation } from "lucide-react";
 import { cjk } from "@streamdown/cjk";
 import { code } from "@streamdown/code";
 import { math } from "@streamdown/math";
@@ -46,12 +46,13 @@ export function ToolInvocationCard({ part }: { part: unknown }) {
   const Icon=name==="navegar_modulo"?Navigation:name==="gerar_relatorio"?FileText:name==="adicionar_tarefa"?ListTodo:name==="controlar_player_hud"?Music2:ArrowUpRight;
   const title=String(input.titulo??input.modulo??labels[name]??"Ação TUNAVI");
   return <div className="my-2 w-full max-w-md rounded-xl border border-vio/30 bg-[#0B0813]/80 p-3 shadow-[0_0_24px_rgba(124,58,237,.10)] backdrop-blur">
-    <div className="flex items-center gap-2"><Icon className="h-4 w-4 text-lav"/><span className="text-[12px] font-semibold text-lav">{labels[name]??"Ação TUNAVI"}</span><span className="ml-auto font-mono text-[9px] uppercase text-lav/45">{failed?"falhou":p.state==="output-available"?"concluída":"em execução"}</span></div>
+    <div className="flex items-center gap-2"><Icon className="h-4 w-4 text-lav"/><span className="text-[12px] font-semibold text-lav">{labels[name]??"Ação TUNAVI"}</span><span className="ml-auto font-mono text-[9px] uppercase text-lav/45">{failed?"falhou":output.requiresUserAction?"aguardando clique":p.state==="output-available"?"concluída":"em execução"}</span></div>
     <p className="mt-2 truncate text-[12px] text-lav/75">{title}</p>
     {name==="navegar_modulo"&&p.state==="output-available"&&<button className="mt-2 inline-flex items-center gap-1 text-[11px] text-lav underline" onClick={()=>void navigate({to:String(output.path??"/") as never})}>Abrir módulo <ArrowUpRight className="h-3 w-3"/></button>}
+    {name==="abrir_aba_externa"&&p.state==="output-available"&&<button className="mt-2 inline-flex items-center gap-1 rounded-lg bg-vio/25 px-2.5 py-1.5 text-[11px] text-lav" onClick={()=>{const url=new URL(String(input.url));if(["https:","http:"].includes(url.protocol)){window.open(url.toString(),"_blank","noopener,noreferrer");}}}>Abrir em nova aba <ExternalLink className="h-3 w-3"/></button>}
     {name==="gerar_relatorio"&&p.state==="output-available"&&<div className="mt-2 flex gap-2"><button className="rounded-lg bg-vio/25 px-2.5 py-1.5 text-[11px] text-lav" onClick={()=>void navigate({to:"/pesquisa" as never})}>Visualizar relatório</button><button className="inline-flex items-center gap-1 rounded-lg border border-lav/20 px-2.5 py-1.5 text-[11px] text-lav/75" onClick={()=>{const r=reportsStore.get().find(x=>x.id===output.id);if(r){void navigator.clipboard.writeText(r.content);toast.success("Relatório copiado.");}}}><Clipboard className="h-3 w-3"/> Copiar</button></div>}
     {name==="adicionar_tarefa"&&p.state==="output-available"&&<label className="mt-2 flex items-center gap-2 text-[11px] text-lav/65"><input type="checkbox" checked={tasksStore.get().find(t=>t.id===output.id)?.status==="done"} onChange={(e)=>tasksStore.set(prev=>prev.map(t=>t.id===output.id?{...t,status:e.target.checked?"done":"todo"}:t))}/> Marcar tarefa como concluída <span className="ml-auto rounded-full bg-vio/20 px-2 py-0.5 uppercase">{String(input.prioridade??"media")}</span></label>}
-    {name==="controlar_player_hud"&&<div className="mt-2 flex gap-2"><button className="rounded-lg bg-vio/25 px-2.5 py-1.5 text-[11px] text-lav" onClick={()=>void controlHudPlayer({acao:playerStore.get().playing?"pausar":"tocar"})}>{playerStore.get().playing?"Pausar":"Tocar"}</button></div>}
+    {name==="controlar_player_hud"&&<div className="mt-2 flex gap-2"><button className="rounded-lg bg-vio/25 px-2.5 py-1.5 text-[11px] text-lav" onClick={()=>void controlHudPlayer(input as {acao:"tocar"|"pausar"|"proxima"|"anterior"|"volume";estilo?:"foco_lofi"|"synthwave"|"cyber_ambient"|"chuva_estudio";volume?:number}).then(()=>toast.success("Player atualizado.")).catch(()=>toast.error("Não foi possível iniciar o áudio."))}>Aplicar controle</button></div>}
     {failed&&<p className="mt-2 text-[11px] text-red-300">{String(output.error??"Não foi possível executar.")}</p>}
   </div>;
 }
