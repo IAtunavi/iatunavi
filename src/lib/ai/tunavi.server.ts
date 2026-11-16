@@ -47,21 +47,22 @@ export async function gateAiRequest(request: Request, module: string) {
   if (!settings.chat_enabled) return { error: json(503, "A IA foi pausada pelo administrador.") };
   if (settings.modules[module] === false) return { error: json(403, "Este módulo foi desativado pelo administrador.") };
 
+  const auth = request.headers.get("authorization");
+  if (!auth?.startsWith("Bearer ")) return { error: json(401, "Entre na TUNAVI para usar os recursos de IA.") };
+  const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(auth.slice(7));
+  if (authError || !authData.user) return { error: json(401, "Sua sessão expirou. Entre novamente para continuar.") };
+  const userId = authData.user.id;
+
   const since = new Date();
   since.setUTCHours(0, 0, 0, 0);
-  const { count } = await supabaseAdmin
+  const { count, error: usageError } = await supabaseAdmin
     .from("ai_usage")
     .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
     .gte("created_at", since.toISOString());
+  if (usageError) return { error: json(500, "Não foi possível verificar seu limite diário de IA.") };
   if ((count ?? 0) >= settings.daily_message_limit) {
-    return { error: json(429, "O limite diário de mensagens da plataforma foi atingido. Tente amanhã ou peça ao administrador para ampliar.") };
-  }
-
-  let userId: string | null = null;
-  const auth = request.headers.get("authorization");
-  if (auth?.startsWith("Bearer ")) {
-    const { data: u } = await supabaseAdmin.auth.getUser(auth.slice(7));
-    userId = u.user?.id ?? null;
+    return { error: json(429, "Você atingiu seu limite diário de mensagens. Tente novamente amanhã ou peça ao administrador para ampliar.") };
   }
 
   const recordUsage = async (feature: string, usage: { inputTokens: number; outputTokens: number }) => {
