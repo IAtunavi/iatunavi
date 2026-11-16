@@ -134,8 +134,9 @@ export function MediaCreator() {
   return <div className="space-y-5">
     <GlassCard>
       <div className="flex flex-wrap gap-2">
-        {tabs.map((item) => { const Icon = item.icon; return <button key={item.id} type="button" onClick={() => { setTab(item.id); setMediaUrl(""); setTextResult(""); }} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] ring-1 transition ${tab === item.id ? "bg-vio/25 text-lav ring-vio/50" : "text-lav/55 ring-lav/15 hover:bg-lav/5"}`}><Icon className="h-4 w-4"/>{item.label}</button>; })}
+        {tabs.map((item) => { const Icon = item.icon; const unavailable = item.id !== "texto"; return <button key={item.id} type="button" disabled={unavailable} aria-disabled={unavailable} title={unavailable ? "Funcionalidade temporariamente em construção" : undefined} onClick={() => { if (!unavailable) { setTab(item.id); setMediaUrl(""); setTextResult(""); } }} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] ring-1 transition ${tab === item.id ? "bg-vio/25 text-lav ring-vio/50" : unavailable ? "cursor-not-allowed text-lav/30 ring-lav/10 opacity-60" : "text-lav/55 ring-lav/15 hover:bg-lav/5"}`}><Icon className="h-4 w-4"/>{item.id === "texto" ? item.label : `${item.label} · Em construção`}</button>; })}
       </div>
+      <p className="mt-3 text-[11px] leading-5 text-lav/45">A criação de imagens e vídeos está temporariamente em construção. Estamos priorizando outras melhorias da TUNAVI; essas ferramentas serão ativadas em uma atualização futura. A criação de textos continua disponível.</p>
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
         <div className="space-y-3">
           <CardTitle>{tab === "texto" ? "O que vamos escrever?" : tab === "imagem" ? "Descreva a imagem" : "Descreva o vídeo"}</CardTitle>
