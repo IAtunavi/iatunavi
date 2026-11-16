@@ -66,7 +66,13 @@ export const reportsStore = createPersisted<Report[]>("reports", [
     createdAt: now - 86400000,
     example: true,
     content:
-      "## Resumo (exemplo)\n\n- Assistentes virtuais no atendimento ganham espaço.\n- Automação de tarefas repetitivas reduz custos operacionais.\n- Conteúdo personalizado com IA melhora conversão.\n\n> Relatório demonstrativo. Gere um novo para obter uma análise real.",
+      "## Resumo (exemplo)
+
+- Assistentes virtuais no atendimento ganham espaço.
+- Automação de tarefas repetitivas reduz custos operacionais.
+- Conteúdo personalizado com IA melhora conversão.
+
+> Relatório demonstrativo. Gere um novo para obter uma análise real.",
   },
 ]);
 
@@ -86,7 +92,8 @@ export type Prefs = {
   voiceRate: number;
   voicePitch: number;
   voiceName: string;
-  autoSpeak: boolean;\n  wakeWordEnabled: boolean;
+  autoSpeak: boolean;
+  wakeWordEnabled: boolean;
   sendMemories: boolean;
   saveHistory: boolean;
   activeAgent: string | null;
@@ -106,7 +113,8 @@ export const prefsStore = createPersisted<Prefs>("prefs", {
   voiceRate: 1,
   voicePitch: 1,
   voiceName: "",
-  autoSpeak: false,\n  wakeWordEnabled: false,
+  autoSpeak: false,
+  wakeWordEnabled: false,
   sendMemories: true,
   saveHistory: true,
   activeAgent: null,
