@@ -68,7 +68,7 @@ function ChatPage() {
   const wake = useWakeWord(() => {
     toast.info("TUNAVI ativada. Pode falar.");
     mic.start();
-  }, prefs.wakeWordEnabled && !busy);
+  }, prefs.wakeWordEnabled && !busy && !mic.listening);
   const lastSpokenId = useRef<string | null>(null);
 
   useEffect(() => {
