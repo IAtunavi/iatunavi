@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
-import { Copy, Mic, MicOff, RotateCcw, Trash2, Volume2, X } from "lucide-react";
+import { AudioLines, Copy, Mic, MicOff, RotateCcw, Trash2, Volume2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
 import { Message, MessageAction, MessageActions, MessageContent, MessageResponse, ToolInvocationCard } from "@/components/ai-elements/message";
@@ -58,6 +58,7 @@ function ChatPage() {
   const submit = (text: string) => {
     const v = text.trim();
     if (!v || busy) return;
+    stopSpeaking();
     playSound("send");
     clearError();
     void sendMessage({ text: v });
@@ -100,7 +101,16 @@ function ChatPage() {
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-1">
-            <span className="hidden items-center gap-1 font-mono text-[9px] uppercase text-lav/45 sm:flex" aria-live="polite">{wake.listening ? "PALAVRA-CHAVE ATIVA" : prefs.wakeWordEnabled ? "MICROFONE INDISPONÍVEL" : ""}</span>
+            <button type="button" onClick={() => {
+              const enabling = !prefs.autoSpeak || !prefs.wakeWordEnabled;
+              if (enabling && (!wake.supported || !mic.supported)) { toast.error("O modo de voz contínua exige reconhecimento de fala compatível. Use Chrome ou Edge e permita o microfone."); return; }
+              if (!enabling) stopSpeaking();
+              prefsStore.set((p) => ({ ...p, autoSpeak: enabling, wakeWordEnabled: enabling }));
+              toast.info(enabling ? "Modo de conversação ativado. Diga: Olá, Tunavi." : "Modo de conversação desativado.");
+            }} aria-pressed={prefs.autoSpeak && prefs.wakeWordEnabled} className={cn("inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[10px] font-mono uppercase tracking-wide ring-1 transition",prefs.autoSpeak && prefs.wakeWordEnabled ? "bg-vio/25 text-lav ring-vio/50" : "text-lav/50 ring-lav/10 hover:bg-lav/5")} title="Ativar ou desativar conversa por voz contínua">
+              <AudioLines className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{prefs.autoSpeak && prefs.wakeWordEnabled ? "JARVIS ativo" : "Modo JARVIS"}</span>
+            </button>
+            <span className="hidden items-center gap-1 font-mono text-[9px] uppercase text-lav/45 sm:flex" aria-live="polite">{wake.listening ? "PALAVRA-CHAVE ATIVA" : prefs.wakeWordEnabled ? "AGUARDANDO MICROFONE" : ""}</span>
             <button type="button" onClick={() => { stopSpeaking(); toast.info("Áudio interrompido."); }} className="grid h-8 w-8 place-items-center rounded-full text-lav/60 hover:bg-lav/10" aria-label="Interromper voz"><Volume2 className="h-4 w-4" /></button>
             {messages.length > 0 && (
               <button
@@ -226,6 +236,7 @@ function ChatPage() {
                       toast.error("Seu navegador não oferece reconhecimento de voz. Experimente o Chrome ou o Edge.");
                       return;
                     }
+                    if (!mic.listening) stopSpeaking();
                     playSound(mic.listening ? "off" : "on");
                     mic.toggle();
                   }}
@@ -258,7 +269,7 @@ function ChatPage() {
               Ativar “Olá, Tunavi”
             </label>
           </div>
-          {prefs.wakeWordEnabled && <p className="mt-1 px-1 text-[10px] text-lav/35">A escuta funciona somente com esta página aberta e visível. O navegador pode processar o reconhecimento de fala; nenhuma gravação é enviada diretamente pela TUNAVI.</p>}
+          {prefs.wakeWordEnabled && <p className="mt-1 px-1 text-[10px] text-lav/35">A escuta funciona somente com esta página aberta e visível, usando o reconhecimento de fala do navegador. A TUNAVI não mantém gravações de áudio. Diga “Olá, Tunavi” para iniciar uma fala; aguarde a resposta e fale novamente para continuar.</p>}
         </div>
       </section>
 
