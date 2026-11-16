@@ -94,8 +94,10 @@ export function PageContainer({ children, className }: { children: ReactNode; cl
 
 /** Shows a locked notice when the Super Painel switched this module off. */
 export function ModuleGate({ module, children }: { module: ModuleKey; children: ReactNode }) {
-  const { data } = useAppSettings();
-  if (data && !isModuleEnabled(data, module)) {
+  const { data, isLoading, error, refetch } = useAppSettings();
+  if (isLoading) return <PageContainer><div className="mx-auto mt-16 max-w-md"><GlassCard className="text-center"><p className="font-mono text-[11px] uppercase tracking-[0.2em] text-lav/45">TUNAVI · HUD</p><p className="mt-3 text-[13px] text-lav/65">Verificando disponibilidade do módulo…</p></GlassCard></div></PageContainer>;
+  if (error || !data) return <PageContainer><div className="mx-auto mt-16 max-w-md"><GlassCard className="text-center"><Lock className="mx-auto h-8 w-8 text-warning"/><h1 className="mt-4 text-lg font-semibold text-lav">Não foi possível validar o acesso</h1><p className="mt-2 text-[13px] text-lav/55">As configurações da plataforma não estão disponíveis. O módulo permanece bloqueado até a validação ser concluída.</p><button onClick={()=>void refetch()} className="mt-5 inline-flex h-9 items-center rounded-full px-4 text-[12px] text-lav/80 ring-1 ring-lav/20 hover:bg-vio/20">Tentar novamente</button></GlassCard></div></PageContainer>;
+  if (!isModuleEnabled(data, module)) {
     const def = moduleByKey(module);
     return (
       <PageContainer>
