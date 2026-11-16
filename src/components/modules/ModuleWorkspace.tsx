@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   Activity, ArrowRight, Bot, Check, CheckCircle2, Circle, Clock3, Download,
@@ -14,9 +14,9 @@ import {
   type ProjectStatus, type TaskStatus,
 } from "@/lib/data";
 import { uid } from "@/lib/persisted";
-import { buildAiContext, streamGenerate } from "@/lib/ai-context";
+import { streamGenerate } from "@/lib/ai-context";
 import { useAuth } from "@/lib/auth";
-import { useAppSettings, AI_MODELS } from "@/lib/settings";
+import { AI_MODELS } from "@/lib/settings";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CardTitle, EmptyState, fieldClass, GlassCard, PageContainer, PageHeader,
