@@ -65,14 +65,13 @@ export const reportsStore = createPersisted<Report[]>("reports", [
     topic: "Tendências de IA para pequenas empresas",
     createdAt: now - 86400000,
     example: true,
-    content:
-      "## Resumo (exemplo)
+    content: `## Resumo (exemplo)
 
 - Assistentes virtuais no atendimento ganham espaço.
 - Automação de tarefas repetitivas reduz custos operacionais.
 - Conteúdo personalizado com IA melhora conversão.
 
-> Relatório demonstrativo. Gere um novo para obter uma análise real.",
+> Relatório demonstrativo. Gere um novo para obter uma análise real.`,
   },
 ]);
 
