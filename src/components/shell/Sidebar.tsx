@@ -10,7 +10,7 @@ function isActive(path: string, current: string) {
   return path === "/" ? current === "/" : current === path || current.startsWith(`${path}/`);
 }
 
-function NavItem({ m, collapsed, current, onNavigate }: { m: ModuleDef; collapsed: boolean; current: string; onNavigate?: () => void }) {
+function NavItem({ m, collapsed, current, onNavigate }: { m: ModuleDef; collapsed: boolean; current: string; onNavigate?: (() => void) | undefined }) {
   const active = isActive(m.path, current);
   const Icon = m.icon;
   return (
