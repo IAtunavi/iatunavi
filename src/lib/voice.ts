@@ -88,6 +88,12 @@ export function getPtVoices(): SpeechSynthesisVoice[] {
   return window.speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().startsWith("pt"));
 }
 
+/** Prefer a masculine Brazilian/Portuguese system voice when the user has not selected one. */
+export function getPreferredMaleVoice(): SpeechSynthesisVoice | undefined {
+  const voices = getPtVoices();
+  return voices.find((voice) => /male|masculino|daniel|jorge|antonio|ricardo|felipe|lucas/i.test(voice.name)) ?? voices[0];
+}
+
 /** Read text aloud with the voice settings from the Voz module. */
 export function speak(text: string, overrides?: { rate?: number; pitch?: number; voiceName?: string }) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
@@ -99,7 +105,7 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
   u.rate = overrides?.rate ?? prefs.voiceRate;
   u.pitch = overrides?.pitch ?? prefs.voicePitch;
   const name = overrides?.voiceName ?? prefs.voiceName;
-  const voice = window.speechSynthesis.getVoices().find((v) => v.name === name) ?? getPtVoices()[0];
+  const voice = window.speechSynthesis.getVoices().find((v) => v.name === name) ?? getPreferredMaleVoice();
   if (voice) u.voice = voice;
   u.onstart = () => setActivity("voice", "respondendo");
   u.onend = () => setActivity("voice", null);
@@ -111,4 +117,93 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
 export function stopSpeaking() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
   setActivity("voice", null);
+}
+
+
+/** Continuous wake-word listener. It only runs while explicitly enabled and the tab is visible. */
+export function useWakeWord(onWake: () => void, enabled: boolean) {
+  const [listening, setListening] = useState(false);
+  const [supported, setSupported] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const callbackRef = useRef(onWake);
+  callbackRef.current = onWake;
+
+  useEffect(() => {
+    const Ctor = getRecognitionCtor();
+    setSupported(!!Ctor);
+    if (!enabled || !Ctor || typeof document === "undefined" || document.visibilityState !== "visible") {
+      setListening(false);
+      return;
+    }
+    let disposed = false;
+    let recognition: Recognition | null = null;
+    let restartTimer: number | undefined;
+    let wakePending = false;
+    let permissionBlocked = false;
+    const start = () => {
+      if (disposed || permissionBlocked || document.visibilityState !== "visible") return;
+      try {
+        recognition = new Ctor();
+        recognition.lang = "pt-BR";
+        recognition.interimResults = true;
+        recognition.continuous = true;
+        recognition.onresult = (event) => {
+          for (let i = event.resultIndex; i < event.results.length; i++) {
+            const transcript = event.results[i]?.[0]?.transcript?.toLocaleLowerCase("pt-BR") ?? "";
+            if (/ol[aá]\s*,?\s*tunavi|ol[aá]\s+tunavi/.test(transcript)) {
+              wakePending = true;
+              recognition?.stop();
+              break;
+            }
+          }
+        };
+        recognition.onerror = (event) => {
+          if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+            permissionBlocked = true;
+            setError("Permissão do microfone negada. Autorize o acesso para usar a palavra de ativação.");
+          } else if (event.error !== "aborted" && event.error !== "no-speech") {
+            setError("A escuta por palavra-chave foi interrompida pelo navegador.");
+          }
+        };
+        recognition.onend = () => {
+          setListening(false);
+          if (disposed || permissionBlocked) return;
+          if (wakePending) {
+            wakePending = false;
+            callbackRef.current();
+            // Allow the one-shot dictation recognizer to acquire the microphone first.
+            restartTimer = window.setTimeout(start, 1800);
+          } else if (document.visibilityState === "visible") {
+            restartTimer = window.setTimeout(start, 700);
+          }
+        };
+        recognition.start();
+        setError(null);
+        setListening(true);
+      } catch {
+        setListening(false);
+        setError("Não foi possível iniciar a escuta. Verifique a permissão do microfone.");
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "hidden") {
+        if (restartTimer) window.clearTimeout(restartTimer);
+        recognition?.stop();
+        setListening(false);
+      } else if (!disposed) {
+        start();
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibility);
+    start();
+    return () => {
+      disposed = true;
+      document.removeEventListener("visibilitychange", onVisibility);
+      if (restartTimer) window.clearTimeout(restartTimer);
+      recognition?.abort();
+      setListening(false);
+    };
+  }, [enabled]);
+
+  return { listening, supported, error };
 }
