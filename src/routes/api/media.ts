@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/media")({
                   generate_audio: false,
                   enable_safety_checker: true,
                 };
-            const response = await fetch(base, { method: "POST", headers, body: JSON.stringify({ input }) });
+            const response = await fetch(base, { method: "POST", headers, body: JSON.stringify(input) });
             const data = await response.json() as { request_id?: string; detail?: string; message?: string };
             if (!response.ok || !data.request_id) {
               console.error("fal submit failed", response.status, data);
