@@ -13,7 +13,6 @@ const styles: Record<PlayerStyle, { title: string; frequencies: [number, number,
 let context: AudioContext | null = null;
 let master: GainNode | null = null;
 let oscillators: OscillatorNode[] = [];
-let filter: BiquadFilterNode | null = null;
 
 export function currentTrackTitle(state = playerStore.get()) {
   return styles[state.style].title;
@@ -21,7 +20,6 @@ export function currentTrackTitle(state = playerStore.get()) {
 function stopNodes() {
   oscillators.forEach((o) => { try { o.stop(); } catch { /* already stopped */ } });
   oscillators = [];
-  filter = null;
 }
 export function stopHudAudio() {
   stopNodes();
@@ -29,8 +27,7 @@ export function stopHudAudio() {
   playerStore.set((p) => ({ ...p, playing: false }));
 }
 export async function startHudAudio(style?: PlayerStyle) {
-  const current = playerStore.get();
-  const nextStyle = style ?? current.style;
+  const nextStyle = style ?? playerStore.get().style;
   const AudioContextCtor = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
   if (!AudioContextCtor) throw new Error("Áudio Web não suportado neste navegador.");
   context ??= new AudioContextCtor();
@@ -44,7 +41,6 @@ export async function startHudAudio(style?: PlayerStyle) {
   lowpass.type = "lowpass";
   lowpass.frequency.value = nextStyle === "chuva_estudio" ? 420 : 900;
   lowpass.connect(master);
-  filter = lowpass;
   styles[nextStyle].frequencies.forEach((frequency, index) => {
     const oscillator = context!.createOscillator();
     const gain = context!.createGain();
