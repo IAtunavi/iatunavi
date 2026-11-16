@@ -58,7 +58,6 @@ jobs:
             src/lib/ai/tunavi.server.ts \
             src/routes/index.tsx \
             src/routes/entrar.tsx \
-            src/routes/super-painel.tsx \
             src/routes/meu-espaco.tsx \
             src/routes/projetos.tsx \
             src/routes/tarefas.tsx \
@@ -71,6 +70,8 @@ jobs:
             src/routes/desktop.tsx \
             src/routes/seguranca.tsx \
             src/routes/configuracoes.tsx
+      - name: TypeScript check
+        run: bunx tsc --noEmit
       - name: Tests
         run: bun run test --passWithNoTests
       - name: Production build
