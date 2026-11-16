@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { toast } from "sonner";
 import { getChat, messageText, saveMessages } from "@/lib/chat-client";
 import { setActivity } from "@/lib/assistant";
-import { logActivity, prefsStore, reportsStore, tasksStore } from "@/lib/data";
+import { logActivity, memoriesStore, prefsStore, reportsStore, tasksStore } from "@/lib/data";
 import { uid } from "@/lib/persisted";
 import { playSound } from "@/lib/sound";
 import { speak } from "@/lib/voice";
@@ -56,6 +56,24 @@ export function ChatBridge() {
               logActivity("Tarefa criada pela TUNAVI: " + String(input.titulo));
               output = { ok:true, id, titulo:input.titulo, prioridade:input.prioridade, prazo:input.prazo };
               toast.success("Tarefa adicionada ao Dashboard.");
+            } else if (name === "salvar_memoria") {
+              const kind = input.tipo as "fato"|"preferencia"|"contexto";
+              const content = String(input.conteudo).trim();
+              if (/senha|password|token|api.?key|cart[aã]o|cvv/i.test(content)) throw new Error("Não posso guardar senhas, chaves ou dados de pagamento.");
+              const existing = memoriesStore.get().find((m) => m.text.toLocaleLowerCase("pt-BR") === content.toLocaleLowerCase("pt-BR"));
+              if (existing) {
+                output = { ok:true, id:existing.id, tipo:existing.kind, conteudo:existing.text, jaExistia:true };
+              } else {
+                const id = uid();
+                memoriesStore.set((prev) => [{ id, kind, text:content, createdAt:Date.now() }, ...prev].slice(0,100));
+                logActivity("Memória salva pela TUNAVI.");
+                output = { ok:true, id, tipo:kind, conteudo:content };
+                toast.success("Memória salva para conversas futuras.");
+              }
+            } else if (name === "buscar_memorias") {
+              const terms = String(input.consulta).toLocaleLowerCase("pt-BR").split(/\\s+/).filter((x) => x.length > 2);
+              const found = memoriesStore.get().map((m) => ({...m, score:terms.filter((term) => m.text.toLocaleLowerCase("pt-BR").includes(term)).length})).filter((m) => m.score > 0).sort((a,b) => b.score-a.score).slice(0,8);
+              output = { ok:true, resultados:found.map(({id,kind,text,createdAt})=>({id,tipo:kind,conteudo:text,criada_em:new Date(createdAt).toISOString()})), total:found.length };
             } else if (name === "controlar_player_hud") {
               output = { ok:true, player:"pronto", requiresUserAction:true, ...input };
               toast.info("Controle de áudio preparado. Clique no cartão para aplicar.");

@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { streamText, tool, type ModelMessage } from "ai";
+import { streamText, tool, stepCountIs, type ModelMessage } from "ai";
 import { z } from "zod";
 
 import {
@@ -16,6 +16,9 @@ export const tunaviTools = {
   gerar_relatorio: tool({ description: "Cria e registra um relatório executivo no espaço do usuário.", inputSchema: z.object({ titulo: z.string().min(1).max(160), categoria: z.string().min(1).max(80), resumo: z.string().min(1).max(1200), metricas: z.array(z.object({ label: z.string().min(1).max(80), valor: z.string().max(160) })).max(20), conteudo_markdown: z.string().min(1).max(20000) }) }),
   controlar_player_hud: tool({ description: "Controla o player de áudio ambiente e foco no HUD da TUNAVI.", inputSchema: z.object({ acao: z.enum(["tocar","pausar","proxima","anterior","volume"]), estilo: z.enum(["foco_lofi","synthwave","cyber_ambient","chuva_estudio"]).optional(), volume: z.number().min(0).max(100).optional() }) }),
   adicionar_tarefa: tool({ description: "Adiciona uma tarefa à lista de tarefas do usuário e ao Dashboard.", inputSchema: z.object({ titulo: z.string().min(1).max(160), prioridade: z.enum(["baixa","media","alta"]), prazo: z.string().max(160) }) }),
+  salvar_memoria: tool({ description: "Salva uma informação útil ou preferência que o usuário pediu para lembrar.", inputSchema: z.object({ tipo: z.enum(["fato","preferencia","contexto"]), conteudo: z.string().min(3).max(400) }) }),
+  buscar_memorias: tool({ description: "Busca memórias pessoais para recuperar preferências, fatos ou decisões anteriores.", inputSchema: z.object({ consulta: z.string().min(2).max(200) }) }),
+
 };
 
 export const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
@@ -44,6 +47,7 @@ export function createResponsesCall(
     ...(instructions ? { instructions } : {}),
     messages,
     tools: tunaviTools,
+    stopWhen: stepCountIs(6),
     abortSignal: request.signal,
     ...(config.maxOutputTokens ? { maxOutputTokens: config.maxOutputTokens } : {}),
     providerOptions: {
