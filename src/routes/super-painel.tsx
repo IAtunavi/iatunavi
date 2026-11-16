@@ -1,27 +1,42 @@
+import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { GlassCard, PageContainer } from "@/components/hud/primitives";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { Activity, Crown, Gauge, ShieldAlert, Users } from "lucide-react";
+import { useAuth } from "@/lib/auth";
+import { AI_MODELS, settingsQueryKey, useAppSettings } from "@/lib/settings";
+import { MODULES, type ModuleKey } from "@/lib/modules";
+import { supabase } from "@/integrations/supabase/client";
+import { GlassCard, PageContainer, PageHeader, fieldClass, primaryButton } from "@/components/hud/primitives";
 
 export const Route = createFileRoute("/super-painel")({
-  head: () => ({
-    meta: [
-      { title: "Super Painel — TUNAVI" },
-      { name: "description", content: "Super Painel na plataforma TUNAVI." },
-      { property: "og:title", content: "Super Painel — TUNAVI" },
-      { property: "og:description", content: "Super Painel na plataforma TUNAVI." },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-    ],
-  }),
-  component: Page,
+  head: () => ({ meta: [{ title: "Super Painel — TUNAVI" }, { name: "description", content: "Administração da plataforma TUNAVI." }] }),
+  component: SuperPanel,
 });
 
-function Page() {
-  return (
-    <PageContainer>
-      <GlassCard className="mx-auto mt-10 max-w-lg text-center">
-        <h1 className="text-xl font-semibold text-lav">Super Painel</h1>
-        <p className="mt-2 text-[13px] text-lav/55">Esta tela ainda está sendo construída.</p>
-      </GlassCard>
-    </PageContainer>
-  );
+function SuperPanel() {
+  const {user,isAdmin,loading}=useAuth();
+  const {data:settings,isLoading,error}=useAppSettings();
+  const qc=useQueryClient();
+  const [model,setModel]=useState(""); const [limit,setLimit]=useState(40); const [tokens,setTokens]=useState(2048);
+  const [prompt,setPrompt]=useState(""); const [maintenance,setMaintenance]=useState(false); const [maintenanceMessage,setMaintenanceMessage]=useState("");
+  const [chatEnabled,setChatEnabled]=useState(true); const [modules,setModules]=useState<Partial<Record<ModuleKey,boolean>>>({});
+  const users=useQuery({queryKey:["admin-profiles"],enabled:isAdmin,queryFn:async()=>{const {data,error}=await supabase.from("profiles").select("id,email,display_name,created_at").order("created_at",{ascending:false}).limit(100);if(error)throw error;return data??[];}});
+  const usage=useQuery({queryKey:["admin-usage"],enabled:isAdmin,queryFn:async()=>{const since=new Date(Date.now()-30*86400000).toISOString();const {data,error}=await supabase.from("ai_usage").select("id,feature,model,input_tokens,output_tokens,created_at,user_id").gte("created_at",since).order("created_at",{ascending:false}).limit(200);if(error)throw error;return data??[];}});
+  const logs=useQuery({queryKey:["admin-audit"],enabled:isAdmin,queryFn:async()=>{const {data,error}=await supabase.from("audit_logs").select("id,action,actor_email,details,created_at").order("created_at",{ascending:false}).limit(50);if(error)throw error;return data??[];}});
+  useEffect(()=>{if(settings){setModel(settings.active_model);setLimit(settings.daily_message_limit);setTokens(settings.max_output_tokens);setPrompt(settings.system_prompt);setMaintenance(settings.maintenance_mode);setMaintenanceMessage(settings.maintenance_message);setChatEnabled(settings.chat_enabled);setModules(settings.modules??{});}},[settings]);
+  const save=async()=>{if(!user)return;const {error}=await supabase.from("app_settings").update({active_model:model,daily_message_limit:limit,max_output_tokens:tokens,system_prompt:prompt,maintenance_mode:maintenance,maintenance_message:maintenanceMessage,chat_enabled:chatEnabled,modules,updated_at:new Date().toISOString(),updated_by:user.id}).eq("id",1);if(error){toast.error("Não foi possível salvar: "+error.message);return;}await qc.invalidateQueries({queryKey:settingsQueryKey});await qc.invalidateQueries({queryKey:["admin-audit"]});toast.success("Configurações globais atualizadas.");};
+  if(loading)return <PageContainer><p className="mt-10 text-center text-[13px] text-lav/50">Verificando permissões...</p></PageContainer>;
+  if(!user||!isAdmin)return <PageContainer><GlassCard className="mx-auto mt-12 max-w-lg text-center"><ShieldAlert className="mx-auto h-9 w-9 text-amber-200"/><h1 className="mt-4 text-xl font-semibold text-lav">Acesso administrativo restrito</h1><p className="mt-2 text-[12px] text-lav/50">{user?"Sua conta não possui a função de administrador.":"Entre com uma conta autorizada para acessar o Super Painel."}</p></GlassCard></PageContainer>;
+  if(isLoading)return <PageContainer><p className="mt-10 text-center text-[13px] text-lav/50">Carregando configurações...</p></PageContainer>;
+  if(error||!settings)return <PageContainer><GlassCard><p className="text-[13px] text-red-200">Não foi possível carregar app_settings. Verifique o projeto Supabase e as políticas administrativas.</p></GlassCard></PageContainer>;
+  const totalTokens=(usage.data??[]).reduce((n,x)=>n+x.input_tokens+x.output_tokens,0);
+  return <PageContainer><PageHeader title="Super Painel" description="Controles administrativos globais da TUNAVI."/><div className="mb-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4"><Metric icon={<Users/>} label="Perfis cadastrados" value={users.data?.length??"—"}/><Metric icon={<Activity/>} label="Registros de IA · 30 dias" value={usage.data?.length??"—"}/><Metric icon={<Gauge/>} label="Tokens registrados · 30 dias" value={totalTokens.toLocaleString("pt-BR")}/><Metric icon={<Crown/>} label="Modelo ativo" value={model.split("/").pop()||"—"}/></div>
+  <div className="grid gap-5 xl:grid-cols-2"><GlassCard><h2 className="text-[14px] font-semibold text-lav">Inteligência artificial</h2><div className="mt-4 space-y-3"><label className="block text-[11px] text-lav/55">Modelo ativo<select className={fieldClass+" mt-2"} value={model} onChange={e=>setModel(e.target.value)}>{AI_MODELS.map(m=><option key={m.id} value={m.id}>{m.label} — {m.note}</option>)}</select></label><label className="block text-[11px] text-lav/55">Limite diário de mensagens por usuário<input className={fieldClass+" mt-2"} type="number" min="1" max="10000" value={limit} onChange={e=>setLimit(Number(e.target.value))}/></label><label className="block text-[11px] text-lav/55">Máximo de tokens por resposta<input className={fieldClass+" mt-2"} type="number" min="128" max="32000" value={tokens} onChange={e=>setTokens(Number(e.target.value))}/></label><label className="block text-[11px] text-lav/55">Instruções globais do sistema<textarea className={fieldClass+" mt-2 min-h-28"} value={prompt} onChange={e=>setPrompt(e.target.value)}/></label><label className="flex items-center gap-2 text-[12px] text-lav/70"><input type="checkbox" checked={chatEnabled} onChange={e=>setChatEnabled(e.target.checked)}/> Permitir solicitações de IA</label></div></GlassCard>
+  <GlassCard><h2 className="text-[14px] font-semibold text-lav">Disponibilidade e módulos</h2><div className="mt-4 space-y-2"><label className="flex items-center gap-2 text-[12px] text-lav/70"><input type="checkbox" checked={maintenance} onChange={e=>setMaintenance(e.target.checked)}/> Ativar modo de manutenção</label><input className={fieldClass} value={maintenanceMessage} onChange={e=>setMaintenanceMessage(e.target.value)} placeholder="Mensagem exibida durante a manutenção"/><p className="pt-2 text-[11px] text-lav/45">Ative ou desative módulos não essenciais. Visão geral e configurações permanecem disponíveis.</p>{MODULES.filter(m=>!m.core).map(m=><label key={m.key} className="flex items-center justify-between rounded-xl px-3 py-2 ring-1 ring-lav/10"><span className="text-[12px] text-lav/75">{m.label}</span><input type="checkbox" checked={modules[m.key]!==false} onChange={e=>setModules(p=>({...p,[m.key]:e.target.checked}))}/></label>)}</div><button className={primaryButton+" mt-5"} onClick={()=>void save()}>Salvar controles globais</button></GlassCard>
+  <GlassCard><h2 className="text-[14px] font-semibold text-lav">Usuários recentes</h2><div className="mt-3 space-y-2">{(users.data??[]).map(u=><div key={u.id} className="flex justify-between gap-3 rounded-xl px-3 py-2 ring-1 ring-lav/10"><div className="min-w-0"><p className="truncate text-[12px] text-lav/80">{u.display_name||u.email||u.id}</p><p className="text-[10px] text-lav/35">{u.email}</p></div><span className="shrink-0 text-[10px] text-lav/35">{new Date(u.created_at).toLocaleDateString("pt-BR")}</span></div>)}{users.isError&&<p className="text-[11px] text-amber-100/70">A consulta de perfis foi bloqueada pelas políticas atuais do banco.</p>}{users.data?.length===0&&<p className="text-[11px] text-lav/40">Nenhum perfil retornado.</p>}</div></GlassCard>
+  <GlassCard><h2 className="text-[14px] font-semibold text-lav">Uso recente de IA</h2><div className="mt-3 space-y-2">{(usage.data??[]).slice(0,12).map(x=><div key={x.id} className="flex justify-between gap-3 rounded-xl px-3 py-2 ring-1 ring-lav/10"><div><p className="text-[11px] text-lav/75">{x.feature} · {x.model}</p><p className="text-[10px] text-lav/35">{new Date(x.created_at).toLocaleString("pt-BR")}</p></div><span className="font-mono text-[11px] text-lav/60">{(x.input_tokens+x.output_tokens).toLocaleString("pt-BR")} tok.</span></div>)}{usage.isError&&<p className="text-[11px] text-amber-100/70">Sem permissão para consultar o uso.</p>}</div></GlassCard>
+  <GlassCard className="xl:col-span-2"><h2 className="text-[14px] font-semibold text-lav">Auditoria recente</h2><div className="mt-3 space-y-2">{(logs.data??[]).map(log=><div key={log.id} className="flex flex-wrap justify-between gap-2 rounded-xl px-3 py-2 ring-1 ring-lav/10"><span className="text-[11px] text-lav/75">{log.action} · {log.actor_email??"Sistema"}</span><span className="text-[10px] text-lav/35">{new Date(log.created_at).toLocaleString("pt-BR")}</span></div>)}{logs.isError&&<p className="text-[11px] text-amber-100/70">Sem permissão para consultar os registros de auditoria.</p>}</div></GlassCard></div></PageContainer>;
 }
+
+function Metric({icon,label,value}:{icon:React.ReactNode;label:string;value:string|number}){return <GlassCard><div className="flex items-center gap-2 text-vio">{icon}<span className="text-[10px] text-lav/45">{label}</span></div><p className="mt-3 truncate font-mono text-xl text-lav">{value}</p></GlassCard>}
