@@ -43,7 +43,7 @@ export function ToolInvocationCard({ part }: { part: unknown }) {
   const name=p.type.slice(5), input=p.input??{}, output=p.output??{};
   const failed=output.ok===false;
   const labels:Record<string,string>={navegar_modulo:"Navegação",abrir_aba_externa:"Link externo",gerar_relatorio:"Relatório gerado",controlar_player_hud:"Player HUD",adicionar_tarefa:"Tarefa criada",salvar_memoria:"Memória salva",buscar_memorias:"Memórias encontradas"};
-  const Icon=name==="navegar_modulo"?Navigation:name==="gerar_relatorio"?FileText:name==="adicionar_tarefa"?ListTodo:name==="controlar_player_hud"?Music2:ArrowUpRight;
+  const Icon=name==="navegar_modulo"?Navigation:name==="gerar_relatorio"?FileText:name==="adicionar_tarefa"?ListTodo:name==="controlar_player_hud"?Music2:name==="salvar_memoria"?Brain:name==="buscar_memorias"?Search:ArrowUpRight;
   const title=String(input.titulo??input.modulo??labels[name]??"Ação TUNAVI");
   return <div className="my-2 w-full max-w-md rounded-xl border border-vio/30 bg-[#0B0813]/80 p-3 shadow-[0_0_24px_rgba(124,58,237,.10)] backdrop-blur">
     <div className="flex items-center gap-2"><Icon className="h-4 w-4 text-lav"/><span className="text-[12px] font-semibold text-lav">{labels[name]??"Ação TUNAVI"}</span><span className="ml-auto font-mono text-[9px] uppercase text-lav/45">{failed?"falhou":output.requiresUserAction?"aguardando clique":p.state==="output-available"?"concluída":"em execução"}</span></div>
