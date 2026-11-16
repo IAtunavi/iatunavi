@@ -16,11 +16,10 @@ export type AppSettings = {
 };
 
 export const AI_MODELS: { id: string; label: string; note: string }[] = [
-  { id: "openai/gpt-6-astra", label: "GPT-6 Astra", note: "Mais capaz — raciocínio profundo (padrão)" },
-  { id: "openai/gpt-6-sol", label: "GPT-6 Sol", note: "Equilíbrio entre qualidade e custo" },
-  { id: "openai/gpt-6-luna", label: "GPT-6 Luna", note: "Rápido e econômico" },
-  { id: "openai/gpt-5.6-terra", label: "GPT-5.6 Terra", note: "Uso diário com custo menor" },
-  { id: "openai/chat-latest", label: "ChatGPT (Instant)", note: "Conversa natural, sem raciocínio" },
+  { id: "openai/gpt-6-astra", label: "GPT-6 Astra", note: "Raciocínio avançado" },
+  { id: "openai/gpt-6-sol", label: "GPT-6 Sol", note: "Equilíbrio entre velocidade e capacidade" },
+  { id: "openai/gpt-6-luna", label: "GPT-6 Luna", note: "Respostas rápidas" },
+  { id: "openai/gpt-5.6-terra", label: "GPT-5.6 Terra", note: "Modelo econômico para uso diário" },
 ];
 
 export const settingsQueryKey = ["app-settings"] as const;
@@ -39,6 +38,6 @@ export function useAppSettings() {
 
 export function isModuleEnabled(settings: AppSettings | undefined, key: ModuleKey) {
   const def = MODULES.find((m) => m.key === key);
-  if (def?.core) return true;
+  if (!def) return false;
   return settings?.modules?.[key] !== false;
 }
