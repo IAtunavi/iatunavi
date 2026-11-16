@@ -14,11 +14,8 @@ import {
 } from "@/lib/data";
 import { uid } from "@/lib/persisted";
 import { playSound } from "@/lib/sound";
-import { MODULES } from "@/lib/modules";
 import { streamGenerate } from "@/lib/ai-context";
 import { useAuth } from "@/lib/auth";
-import { AI_MODELS } from "@/lib/settings";
-import { supabase } from "@/integrations/supabase/client";
 import {
   CardTitle, EmptyState, fieldClass, GlassCard, PageContainer, PageHeader,
   pillButton, primaryButton,
