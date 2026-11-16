@@ -86,7 +86,7 @@ export type Prefs = {
   voiceRate: number;
   voicePitch: number;
   voiceName: string;
-  autoSpeak: boolean;
+  autoSpeak: boolean;\n  wakeWordEnabled: boolean;
   sendMemories: boolean;
   saveHistory: boolean;
   activeAgent: string | null;
@@ -106,7 +106,7 @@ export const prefsStore = createPersisted<Prefs>("prefs", {
   voiceRate: 1,
   voicePitch: 1,
   voiceName: "",
-  autoSpeak: false,
+  autoSpeak: false,\n  wakeWordEnabled: false,
   sendMemories: true,
   saveHistory: true,
   activeAgent: null,
