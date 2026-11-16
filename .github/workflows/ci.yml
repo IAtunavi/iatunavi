@@ -40,6 +40,10 @@ jobs:
             src/routes/tarefas.tsx \
             src/routes/pesquisa.tsx \
             src/routes/criador.tsx \
+            src/routes/api/media.ts \
+            src/components/creator/MediaCreator.tsx \
+            src/routes/api/media.ts \
+            src/components/creator/MediaCreator.tsx \
             src/routes/agentes.tsx \
             src/routes/memoria.tsx \
             src/routes/voz.tsx \
