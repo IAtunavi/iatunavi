@@ -71,7 +71,7 @@ export function ChatBridge() {
                 toast.success("Memória salva para conversas futuras.");
               }
             } else if (name === "buscar_memorias") {
-              const terms = String(input.consulta).toLocaleLowerCase("pt-BR").split(/\\s+/).filter((x) => x.length > 2);
+              const terms = String(input.consulta).toLocaleLowerCase("pt-BR").split(/\s+/).filter((x) => x.length > 2);
               const found = memoriesStore.get().map((m) => ({...m, score:terms.filter((term) => m.text.toLocaleLowerCase("pt-BR").includes(term)).length})).filter((m) => m.score > 0).sort((a,b) => b.score-a.score).slice(0,8);
               output = { ok:true, resultados:found.map(({id,kind,text,createdAt})=>({id,tipo:kind,conteudo:text,criada_em:new Date(createdAt).toISOString()})), total:found.length };
             } else if (name === "controlar_player_hud") {
