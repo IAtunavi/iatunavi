@@ -4,7 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Hologram } from "@/components/hologram/Hologram";
 import { StateSelector } from "@/components/hologram/StateSelector";
 import { QuickComposer } from "@/components/hud/QuickComposer";
-import { CardTitle, ExampleBadge, GlassCard } from "@/components/hud/primitives";
+import { CardTitle, GlassCard } from "@/components/hud/primitives";
 import { activitiesStore, formatTime, projectsStore, tasksStore } from "@/lib/data";
 import { getChat, messageText } from "@/lib/chat-client";
 import { MODULES } from "@/lib/modules";
@@ -193,7 +193,7 @@ function SecondaryRow() {
       </GlassCard>
 
       <GlassCard className="md:col-span-2 xl:col-span-1">
-        <CardTitle aside={<ExampleBadge className="align-middle" />}>Estado e Utilização</CardTitle>
+        <CardTitle>Estado e Utilização</CardTitle>
         <dl className="mt-4 grid grid-cols-2 gap-3 text-[12px]">
           {[
             ["Módulos ativos", `${enabledCount}/${MODULES.length}`],
