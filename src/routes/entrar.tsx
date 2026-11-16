@@ -32,7 +32,7 @@ function LoginPage() {
       if(password!==confirm)throw new Error("As senhas não coincidem.");
       const {data,error}=await supabase.auth.signUp({email:normalized,password,options:{data:{display_name:name.trim()||null},emailRedirectTo:window.location.origin+"/entrar"}});
       if(error)throw error;
-      if(data.session){logActivity("Nova conta criada e autenticada.");toast.success("Conta criada. Bem-vindo à TUNAVI!");await navigate({to:"/"});}
+      if(data.session){toast.success("Conta criada. Bem-vindo à TUNAVI!");await navigate({to:"/"});}
       else toast.success("Cadastro recebido. Confirme seu e-mail para ativar a conta.");
     } else {
       const {error}=await supabase.auth.signInWithPassword({email:normalized,password});
