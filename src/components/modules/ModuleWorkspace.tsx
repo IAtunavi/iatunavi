@@ -18,6 +18,7 @@ import { MODULES } from "@/lib/modules";
 import { streamGenerate } from "@/lib/ai-context";
 import { useAuth } from "@/lib/auth";
 import { getPreferredMaleVoice } from "@/lib/voice";
+import { MediaCreator } from "@/components/creator/MediaCreator";
 import {
   CardTitle, EmptyState, fieldClass, GlassCard, PageContainer, PageHeader,
   pillButton, primaryButton,
@@ -62,7 +63,7 @@ function ModuleBody({ section }: { section: Section }) {
     case "projetos": return <Projects />;
     case "meu-espaco": return <MySpace />;
     case "pesquisa": return <Generator mode="pesquisa" />;
-    case "criador": return <Generator mode="criador" />;
+    case "criador": return <MediaCreator />;
     case "agentes": return <Agents />;
     case "memoria": return <Memory />;
     case "voz": return <Voice />;
