@@ -58,7 +58,7 @@ export const Route = createFileRoute("/api/media")({
           return Response.json({ error: "Pedido de criação inválido." }, { status: 400 });
         }
 
-        const gate = await gateAiRequest(request, "criador");
+        const gate = await gateAiRequest(request, "criador", false);
         if ("error" in gate) return gate.error;
         const falKey = process.env["FAL_KEY"];
         if (!falKey) {
