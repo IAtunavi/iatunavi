@@ -4,7 +4,6 @@ import { LockKeyhole, Mail, Sparkles, UserPlus } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { logActivity } from "@/lib/data";
 import { GlassCard, PageContainer, fieldClass, primaryButton, pillButton } from "@/components/hud/primitives";
 
 const MASTER_EMAIL = "tunavinetwork@gmail.com";
@@ -37,7 +36,7 @@ function LoginPage() {
       else toast.success("Cadastro recebido. Confirme seu e-mail para ativar a conta.");
     } else {
       const {error}=await supabase.auth.signInWithPassword({email:normalized,password});
-      if(error)throw error;logActivity("Login realizado: "+normalized);toast.success("Acesso realizado.");await navigate({to:"/"});
+      if(error)throw error;toast.success("Acesso realizado.");await navigate({to:"/"});
     }
   }catch(err){toast.error(err instanceof Error?err.message:"Não foi possível concluir a solicitação.");}finally{setBusy(false);}};
   return <PageContainer className="flex min-h-[75vh] items-center justify-center">
