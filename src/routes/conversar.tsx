@@ -4,7 +4,7 @@ import { useChat } from "@ai-sdk/react";
 import { Copy, Mic, MicOff, RotateCcw, Trash2, Volume2, X } from "lucide-react";
 import { toast } from "sonner";
 import { Conversation, ConversationContent, ConversationScrollButton } from "@/components/ai-elements/conversation";
-import { Message, MessageAction, MessageActions, MessageContent, MessageResponse } from "@/components/ai-elements/message";
+import { Message, MessageAction, MessageActions, MessageContent, MessageResponse, ToolInvocationCard } from "@/components/ai-elements/message";
 import { PromptInput, PromptInputButton, PromptInputFooter, PromptInputSubmit, PromptInputTextarea, PromptInputTools } from "@/components/ai-elements/prompt-input";
 import { Shimmer } from "@/components/ai-elements/shimmer";
 import { Hologram } from "@/components/hologram/Hologram";
@@ -164,7 +164,7 @@ function ChatPage() {
                               {part.text}
                             </p>
                           )
-                        ) : null,
+                        ) : part.type.startsWith("tool-") ? <ToolInvocationCard key={i} part={part} /> : null,
                       )}
                     </MessageContent>
                     {m.role === "assistant" && text && !(isLast && busy) && (
