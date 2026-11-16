@@ -8,11 +8,30 @@ import { CardTitle, fieldClass, GlassCard, primaryButton } from "@/components/hu
 
 type Tab = "texto" | "imagem" | "video";
 type SavedMedia = { id: string; type: "image" | "video"; prompt: string; url: string; createdAt: number };
-
+type ApiError = { error?: string };
 const HISTORY_KEY = "tunavi.media.history.v1";
 
 function loadHistory(): SavedMedia[] {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]") as SavedMedia[]; } catch { return []; }
+  try {
+    const parsed: unknown = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    return Array.isArray(parsed) ? parsed.filter((item): item is SavedMedia =>
+      item && typeof item.id === "string" && (item.type === "image" || item.type === "video") &&
+      typeof item.prompt === "string" && typeof item.url === "string" && typeof item.createdAt === "number"
+    ) : [];
+  } catch { return []; }
+}
+
+async function readApi<T extends ApiError>(response: Response): Promise<T> {
+  const raw = await response.text();
+  let data: T;
+  try { data = (raw ? JSON.parse(raw) : {}) as T; }
+  catch { throw new Error("O servidor retornou uma resposta inválida. Tente novamente."); }
+  if (!response.ok) throw new Error(data.error || `Erro no servidor (${response.status}).`);
+  return data;
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function MediaCreator() {
@@ -29,7 +48,8 @@ export function MediaCreator() {
 
   const saveHistory = (items: SavedMedia[]) => {
     setHistory(items);
-    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 30))); } catch { /* storage unavailable */ }
+    try { localStorage.setItem(HISTORY_KEY, JSON.stringify(items.slice(0, 30))); }
+    catch { toast.error("O navegador não conseguiu salvar a galeria neste dispositivo."); }
   };
 
   const createText = async () => {
@@ -49,28 +69,42 @@ export function MediaCreator() {
     const mediaType = tab === "imagem" ? "image" : "video";
     try {
       const headers = { "content-type": "application/json", ...(await authHeaders()) };
-      const submit = await fetch("/api/media", { method: "POST", headers, body: JSON.stringify({ action: "submit", mediaType, prompt: prompt.trim(), aspectRatio, duration }) });
-      const submitted = await submit.json() as { requestId?: string; error?: string };
-      if (!submit.ok || !submitted.requestId) throw new Error(submitted.error || "Não foi possível iniciar a criação.");
-      let status = "IN_PROGRESS";
-      for (let attempt = 0; attempt < 90; attempt++) {
-        await new Promise((resolve) => setTimeout(resolve, 4000));
-        const check = await fetch("/api/media", { method: "POST", headers, body: JSON.stringify({ action: "status", mediaType, requestId: submitted.requestId }) });
-        const state = await check.json() as { status?: string; error?: string };
-        if (!check.ok) throw new Error(state.error || "Erro ao consultar a criação.");
-        status = state.status || "IN_PROGRESS";
-        if (status === "COMPLETED") break;
-        if (status === "FAILED" || status === "CANCELLED") throw new Error("O serviço não conseguiu concluir a criação. Tente outro prompt.");
+      const post = async <T extends ApiError>(payload: object) => {
+        const response = await fetch("/api/media", { method: "POST", headers, body: JSON.stringify(payload) });
+        return readApi<T>(response);
+      };
+      const submitted = await post<{ requestId?: string }>({
+        action: "submit", mediaType, prompt: prompt.trim(), aspectRatio, duration,
+      });
+      if (!submitted.requestId) throw new Error("A fal.ai não retornou o identificador da criação.");
+
+      let completed = false;
+      const deadline = Date.now() + 6 * 60 * 1000;
+      while (Date.now() < deadline) {
+        await wait(4000);
+        const state = await post<{ status?: string }>({
+          action: "status", mediaType, requestId: submitted.requestId,
+        });
+        const status = (state.status || "IN_QUEUE").toUpperCase();
+        if (status === "COMPLETED") { completed = true; break; }
+        if (status === "FAILED" || status === "CANCELLED") {
+          throw new Error("A fal.ai não conseguiu concluir esta criação. Tente ajustar a descrição ou verificar os créditos da conta.");
+        }
+        if (status !== "IN_QUEUE" && status !== "IN_PROGRESS") {
+          throw new Error(`Status inesperado retornado pela fal.ai: ${status}`);
+        }
       }
-      if (status !== "COMPLETED") throw new Error("A criação está demorando mais que o esperado. Tente novamente em alguns instantes.");
-      const result = await fetch("/api/media", { method: "POST", headers, body: JSON.stringify({ action: "result", mediaType, requestId: submitted.requestId }) });
-      const output = await result.json() as { url?: string; error?: string };
-      if (!result.ok || !output.url) throw new Error(output.error || "O arquivo não foi retornado.");
+      if (!completed) throw new Error("A criação excedeu o tempo de espera. Ela pode continuar na fila da fal.ai; tente consultar novamente mais tarde.");
+      const output = await post<{ url?: string }>({
+        action: "result", mediaType, requestId: submitted.requestId,
+      });
+      if (!output.url || !/^https:\/\//i.test(output.url)) throw new Error("A fal.ai concluiu o pedido, mas não retornou um arquivo válido.");
       setMediaUrl(output.url);
       saveHistory([{ id: uid(), type: mediaType, prompt: prompt.trim(), url: output.url, createdAt: Date.now() }, ...history]);
       toast.success(mediaType === "image" ? "Imagem criada!" : "Vídeo criado!");
-    } catch (error) { toast.error(error instanceof Error ? error.message : "Falha na criação."); }
-    finally { setBusy(false); }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha na criação.");
+    } finally { setBusy(false); }
   };
 
   const removeHistory = (id: string) => saveHistory(history.filter((item) => item.id !== id));
