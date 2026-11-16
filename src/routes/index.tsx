@@ -4,7 +4,7 @@ import { ArrowRight, Check } from "lucide-react";
 import { Hologram } from "@/components/hologram/Hologram";
 import { StateSelector } from "@/components/hologram/StateSelector";
 import { QuickComposer } from "@/components/hud/QuickComposer";
-import { CardTitle, GlassCard } from "@/components/hud/primitives";
+import { CardTitle, GlassCard, ModuleGate } from "@/components/hud/primitives";
 import { activitiesStore, formatTime, projectsStore, tasksStore } from "@/lib/data";
 import { getChat, messageText } from "@/lib/chat-client";
 import { MODULES } from "@/lib/modules";
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:card", content: "summary_large_image" },
     ],
   }),
-  component: Overview,
+  component: () => <ModuleGate module="visao-geral"><Overview /></ModuleGate>,
 });
 
 const QUICK = [
