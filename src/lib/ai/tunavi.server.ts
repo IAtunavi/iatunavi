@@ -35,7 +35,7 @@ function json(status: number, error: string) {
  * daily message limit set in the Super Painel. Returns settings or an error Response.
  */
 export async function gateAiRequest(request: Request, module: string) {
-  const apiKey = process.env.LOVABLE_API_KEY;
+  const apiKey = process.env['LOVABLE_API_KEY'];
   if (!apiKey) return { error: json(500, "A IA ainda não está configurada no servidor.") };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");

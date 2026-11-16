@@ -58,6 +58,7 @@ export function useSpeechInput(onFinal: (text: string) => void) {
       let interimText = "";
       for (let i = e.resultIndex; i < e.results.length; i++) {
         const r = e.results[i];
+        if (!r || !r[0]) continue;
         if (r.isFinal) finalText += r[0].transcript;
         else interimText += r[0].transcript;
       }

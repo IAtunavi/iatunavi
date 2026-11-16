@@ -42,7 +42,7 @@ export async function streamGenerate(
     method: "POST",
     headers: { "content-type": "application/json", ...(await authHeaders()) },
     body: JSON.stringify({ ...input, context: buildAiContext() }),
-    signal,
+    ...(signal ? { signal } : {}),
   });
   if (!res.ok || !res.body) {
     const text = await res.text().catch(() => "");

@@ -10,7 +10,21 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AgentesRouteImport } from './routes/agentes'
+import { Route as ConfiguracoesRouteImport } from './routes/configuracoes'
 import { Route as ConversarRouteImport } from './routes/conversar'
+import { Route as CriadorRouteImport } from './routes/criador'
+import { Route as DesktopRouteImport } from './routes/desktop'
+import { Route as EntrarRouteImport } from './routes/entrar'
+import { Route as IntegracoesRouteImport } from './routes/integracoes'
+import { Route as MemoriaRouteImport } from './routes/memoria'
+import { Route as MeuEspacoRouteImport } from './routes/meu-espaco'
+import { Route as PesquisaRouteImport } from './routes/pesquisa'
+import { Route as ProjetosRouteImport } from './routes/projetos'
+import { Route as SegurancaRouteImport } from './routes/seguranca'
+import { Route as SuperPainelRouteImport } from './routes/super-painel'
+import { Route as TarefasRouteImport } from './routes/tarefas'
+import { Route as VozRouteImport } from './routes/voz'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as ApiGenerateRouteImport } from './routes/api/generate'
 
@@ -19,9 +33,79 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AgentesRoute = AgentesRouteImport.update({
+  id: '/agentes',
+  path: '/agentes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfiguracoesRoute = ConfiguracoesRouteImport.update({
+  id: '/configuracoes',
+  path: '/configuracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ConversarRoute = ConversarRouteImport.update({
   id: '/conversar',
   path: '/conversar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CriadorRoute = CriadorRouteImport.update({
+  id: '/criador',
+  path: '/criador',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DesktopRoute = DesktopRouteImport.update({
+  id: '/desktop',
+  path: '/desktop',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EntrarRoute = EntrarRouteImport.update({
+  id: '/entrar',
+  path: '/entrar',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IntegracoesRoute = IntegracoesRouteImport.update({
+  id: '/integracoes',
+  path: '/integracoes',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MemoriaRoute = MemoriaRouteImport.update({
+  id: '/memoria',
+  path: '/memoria',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MeuEspacoRoute = MeuEspacoRouteImport.update({
+  id: '/meu-espaco',
+  path: '/meu-espaco',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PesquisaRoute = PesquisaRouteImport.update({
+  id: '/pesquisa',
+  path: '/pesquisa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProjetosRoute = ProjetosRouteImport.update({
+  id: '/projetos',
+  path: '/projetos',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SegurancaRoute = SegurancaRouteImport.update({
+  id: '/seguranca',
+  path: '/seguranca',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SuperPainelRoute = SuperPainelRouteImport.update({
+  id: '/super-painel',
+  path: '/super-painel',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TarefasRoute = TarefasRouteImport.update({
+  id: '/tarefas',
+  path: '/tarefas',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const VozRoute = VozRouteImport.update({
+  id: '/voz',
+  path: '/voz',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -37,34 +121,145 @@ const ApiGenerateRoute = ApiGenerateRouteImport.update({
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/agentes': typeof AgentesRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/conversar': typeof ConversarRoute
+  '/criador': typeof CriadorRoute
+  '/desktop': typeof DesktopRoute
+  '/entrar': typeof EntrarRoute
+  '/integracoes': typeof IntegracoesRoute
+  '/memoria': typeof MemoriaRoute
+  '/meu-espaco': typeof MeuEspacoRoute
+  '/pesquisa': typeof PesquisaRoute
+  '/projetos': typeof ProjetosRoute
+  '/seguranca': typeof SegurancaRoute
+  '/super-painel': typeof SuperPainelRoute
+  '/tarefas': typeof TarefasRoute
+  '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/agentes': typeof AgentesRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/conversar': typeof ConversarRoute
+  '/criador': typeof CriadorRoute
+  '/desktop': typeof DesktopRoute
+  '/entrar': typeof EntrarRoute
+  '/integracoes': typeof IntegracoesRoute
+  '/memoria': typeof MemoriaRoute
+  '/meu-espaco': typeof MeuEspacoRoute
+  '/pesquisa': typeof PesquisaRoute
+  '/projetos': typeof ProjetosRoute
+  '/seguranca': typeof SegurancaRoute
+  '/super-painel': typeof SuperPainelRoute
+  '/tarefas': typeof TarefasRoute
+  '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/agentes': typeof AgentesRoute
+  '/configuracoes': typeof ConfiguracoesRoute
   '/conversar': typeof ConversarRoute
+  '/criador': typeof CriadorRoute
+  '/desktop': typeof DesktopRoute
+  '/entrar': typeof EntrarRoute
+  '/integracoes': typeof IntegracoesRoute
+  '/memoria': typeof MemoriaRoute
+  '/meu-espaco': typeof MeuEspacoRoute
+  '/pesquisa': typeof PesquisaRoute
+  '/projetos': typeof ProjetosRoute
+  '/seguranca': typeof SegurancaRoute
+  '/super-painel': typeof SuperPainelRoute
+  '/tarefas': typeof TarefasRoute
+  '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/conversar' | '/api/chat' | '/api/generate'
+  fullPaths:
+    | '/'
+    | '/agentes'
+    | '/configuracoes'
+    | '/conversar'
+    | '/criador'
+    | '/desktop'
+    | '/entrar'
+    | '/integracoes'
+    | '/memoria'
+    | '/meu-espaco'
+    | '/pesquisa'
+    | '/projetos'
+    | '/seguranca'
+    | '/super-painel'
+    | '/tarefas'
+    | '/voz'
+    | '/api/chat'
+    | '/api/generate'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/conversar' | '/api/chat' | '/api/generate'
-  id: '__root__' | '/' | '/conversar' | '/api/chat' | '/api/generate'
+  to:
+    | '/'
+    | '/agentes'
+    | '/configuracoes'
+    | '/conversar'
+    | '/criador'
+    | '/desktop'
+    | '/entrar'
+    | '/integracoes'
+    | '/memoria'
+    | '/meu-espaco'
+    | '/pesquisa'
+    | '/projetos'
+    | '/seguranca'
+    | '/super-painel'
+    | '/tarefas'
+    | '/voz'
+    | '/api/chat'
+    | '/api/generate'
+  id:
+    | '__root__'
+    | '/'
+    | '/agentes'
+    | '/configuracoes'
+    | '/conversar'
+    | '/criador'
+    | '/desktop'
+    | '/entrar'
+    | '/integracoes'
+    | '/memoria'
+    | '/meu-espaco'
+    | '/pesquisa'
+    | '/projetos'
+    | '/seguranca'
+    | '/super-painel'
+    | '/tarefas'
+    | '/voz'
+    | '/api/chat'
+    | '/api/generate'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AgentesRoute: typeof AgentesRoute
+  ConfiguracoesRoute: typeof ConfiguracoesRoute
   ConversarRoute: typeof ConversarRoute
+  CriadorRoute: typeof CriadorRoute
+  DesktopRoute: typeof DesktopRoute
+  EntrarRoute: typeof EntrarRoute
+  IntegracoesRoute: typeof IntegracoesRoute
+  MemoriaRoute: typeof MemoriaRoute
+  MeuEspacoRoute: typeof MeuEspacoRoute
+  PesquisaRoute: typeof PesquisaRoute
+  ProjetosRoute: typeof ProjetosRoute
+  SegurancaRoute: typeof SegurancaRoute
+  SuperPainelRoute: typeof SuperPainelRoute
+  TarefasRoute: typeof TarefasRoute
+  VozRoute: typeof VozRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateRoute: typeof ApiGenerateRoute
 }
@@ -78,11 +273,109 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/agentes': {
+      id: '/agentes'
+      path: '/agentes'
+      fullPath: '/agentes'
+      preLoaderRoute: typeof AgentesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/configuracoes': {
+      id: '/configuracoes'
+      path: '/configuracoes'
+      fullPath: '/configuracoes'
+      preLoaderRoute: typeof ConfiguracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/conversar': {
       id: '/conversar'
       path: '/conversar'
       fullPath: '/conversar'
       preLoaderRoute: typeof ConversarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/criador': {
+      id: '/criador'
+      path: '/criador'
+      fullPath: '/criador'
+      preLoaderRoute: typeof CriadorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/desktop': {
+      id: '/desktop'
+      path: '/desktop'
+      fullPath: '/desktop'
+      preLoaderRoute: typeof DesktopRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/entrar': {
+      id: '/entrar'
+      path: '/entrar'
+      fullPath: '/entrar'
+      preLoaderRoute: typeof EntrarRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/integracoes': {
+      id: '/integracoes'
+      path: '/integracoes'
+      fullPath: '/integracoes'
+      preLoaderRoute: typeof IntegracoesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/memoria': {
+      id: '/memoria'
+      path: '/memoria'
+      fullPath: '/memoria'
+      preLoaderRoute: typeof MemoriaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/meu-espaco': {
+      id: '/meu-espaco'
+      path: '/meu-espaco'
+      fullPath: '/meu-espaco'
+      preLoaderRoute: typeof MeuEspacoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pesquisa': {
+      id: '/pesquisa'
+      path: '/pesquisa'
+      fullPath: '/pesquisa'
+      preLoaderRoute: typeof PesquisaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/projetos': {
+      id: '/projetos'
+      path: '/projetos'
+      fullPath: '/projetos'
+      preLoaderRoute: typeof ProjetosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/seguranca': {
+      id: '/seguranca'
+      path: '/seguranca'
+      fullPath: '/seguranca'
+      preLoaderRoute: typeof SegurancaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/super-painel': {
+      id: '/super-painel'
+      path: '/super-painel'
+      fullPath: '/super-painel'
+      preLoaderRoute: typeof SuperPainelRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tarefas': {
+      id: '/tarefas'
+      path: '/tarefas'
+      fullPath: '/tarefas'
+      preLoaderRoute: typeof TarefasRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/voz': {
+      id: '/voz'
+      path: '/voz'
+      fullPath: '/voz'
+      preLoaderRoute: typeof VozRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -104,7 +397,21 @@ declare module '@tanstack/react-router' {
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AgentesRoute: AgentesRoute,
+  ConfiguracoesRoute: ConfiguracoesRoute,
   ConversarRoute: ConversarRoute,
+  CriadorRoute: CriadorRoute,
+  DesktopRoute: DesktopRoute,
+  EntrarRoute: EntrarRoute,
+  IntegracoesRoute: IntegracoesRoute,
+  MemoriaRoute: MemoriaRoute,
+  MeuEspacoRoute: MeuEspacoRoute,
+  PesquisaRoute: PesquisaRoute,
+  ProjetosRoute: ProjetosRoute,
+  SegurancaRoute: SegurancaRoute,
+  SuperPainelRoute: SuperPainelRoute,
+  TarefasRoute: TarefasRoute,
+  VozRoute: VozRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateRoute: ApiGenerateRoute,
 }
