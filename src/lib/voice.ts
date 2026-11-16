@@ -139,8 +139,9 @@ export function useWakeWord(onWake: () => void, enabled: boolean) {
     let recognition: Recognition | null = null;
     let restartTimer: number | undefined;
     let wakePending = false;
+    let permissionBlocked = false;
     const start = () => {
-      if (disposed || document.visibilityState !== "visible") return;
+      if (disposed || permissionBlocked || document.visibilityState !== "visible") return;
       try {
         recognition = new Ctor();
         recognition.lang = "pt-BR";
@@ -158,6 +159,7 @@ export function useWakeWord(onWake: () => void, enabled: boolean) {
         };
         recognition.onerror = (event) => {
           if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+            permissionBlocked = true;
             setError("Permissão do microfone negada. Autorize o acesso para usar a palavra de ativação.");
           } else if (event.error !== "aborted" && event.error !== "no-speech") {
             setError("A escuta por palavra-chave foi interrompida pelo navegador.");
@@ -165,7 +167,7 @@ export function useWakeWord(onWake: () => void, enabled: boolean) {
         };
         recognition.onend = () => {
           setListening(false);
-          if (disposed) return;
+          if (disposed || permissionBlocked) return;
           if (wakePending) {
             wakePending = false;
             callbackRef.current();
