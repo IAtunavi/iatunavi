@@ -32,11 +32,27 @@ export type ModuleKey =
   | "seguranca"
   | "configuracoes";
 
+export type AppPath =
+  | "/"
+  | "/conversar"
+  | "/meu-espaco"
+  | "/projetos"
+  | "/tarefas"
+  | "/pesquisa"
+  | "/criador"
+  | "/agentes"
+  | "/memoria"
+  | "/voz"
+  | "/integracoes"
+  | "/desktop"
+  | "/seguranca"
+  | "/configuracoes";
+
 export type ModuleDef = {
   key: ModuleKey;
   label: string;
   short: string;
-  path: string;
+  path: AppPath;
   icon: LucideIcon;
   /** Core modules can't be switched off from the Super Painel. */
   core?: boolean;
