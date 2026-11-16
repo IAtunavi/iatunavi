@@ -76,6 +76,20 @@ export function MediaCreator() {
         const response = await fetch("/api/media", { method: "POST", headers, body: JSON.stringify(payload) });
         return readApi<T>(response);
       };
+      if (mediaType === "image") {
+        const output = await post<{ url?: string }>({
+          action: "generate-image",
+          prompt: prompt.trim(),
+        });
+        if (!output.url || !output.url.startsWith("data:image/")) {
+          throw new Error("A Cloudflare não retornou uma imagem válida.");
+        }
+        setMediaUrl(output.url);
+        saveHistory([{ id: uid(), type: "image", prompt: prompt.trim(), url: output.url, createdAt: Date.now() }, ...history]);
+        toast.success("Imagem criada com sucesso pela Cloudflare!");
+        return;
+      }
+
       const submitted = await post<{ requestId?: string }>({
         action: "submit", mediaType, prompt: prompt.trim(), aspectRatio, duration,
       });
@@ -125,13 +139,13 @@ export function MediaCreator() {
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
         <div className="space-y-3">
           <CardTitle>{tab === "texto" ? "O que vamos escrever?" : tab === "imagem" ? "Descreva a imagem" : "Descreva o vídeo"}</CardTitle>
-          <textarea className={fieldClass + " min-h-36"} value={prompt} onChange={(event) => setPrompt(event.target.value)} maxLength={2500} placeholder={tab === "texto" ? "Ex.: Crie uma apresentação profissional sobre inteligência artificial..." : tab === "imagem" ? "Ex.: Uma cidade futurista à noite, iluminação cinematográfica, detalhes roxos..." : "Ex.: Uma nave futurista sobrevoando uma cidade iluminada, câmera em movimento suave..."}/>
+          <textarea className={fieldClass + " min-h-36"} value={prompt} onChange={(event) => setPrompt(event.target.value)} maxLength={tab === "imagem" ? 2048 : 2500} placeholder={tab === "texto" ? "Ex.: Crie uma apresentação profissional sobre inteligência artificial..." : tab === "imagem" ? "Ex.: Uma cidade futurista à noite, iluminação cinematográfica, detalhes roxos..." : "Ex.: Uma nave futurista sobrevoando uma cidade iluminada, câmera em movimento suave..."}/>
           {tab !== "texto" && <div className="grid gap-3 sm:grid-cols-2">
             <label className="text-[11px] text-lav/55">Proporção<select className={fieldClass + " mt-2"} value={aspectRatio} onChange={(event) => setAspectRatio(event.target.value)}><option value="16:9">16:9 · Paisagem</option><option value="1:1">1:1 · Quadrado</option><option value="9:16">9:16 · Vertical</option></select></label>
             {tab === "video" && <label className="text-[11px] text-lav/55">Duração<select className={fieldClass + " mt-2"} value={duration} onChange={(event) => setDuration(event.target.value)}><option value="5">5 segundos</option><option value="10">10 segundos</option></select></label>}
           </div>}
           <button type="button" className={primaryButton} disabled={busy} onClick={() => void (tab === "texto" ? createText() : createMedia())}>{busy ? <RefreshCw className="h-4 w-4 animate-spin"/> : <WandSparkles className="h-4 w-4"/>}{busy ? " Criando..." : tab === "texto" ? " Criar texto" : tab === "imagem" ? " Gerar imagem" : " Gerar vídeo"}</button>
-          <p className="text-[10px] leading-5 text-lav/35">Imagens e vídeos usam créditos da fal.ai. O tempo e o custo variam conforme o modelo e a duração.</p>
+          <p className="text-[10px] leading-5 text-lav/35">Imagens usam Cloudflare Workers AI e estão sujeitas à cota da conta. Vídeos continuam usando fal.ai e exigem créditos.</p>
         </div>
         <div className="min-h-64 rounded-2xl bg-ink/35 p-4 ring-1 ring-lav/10">
           <CardTitle aside={busy ? "processando" : mediaUrl || textResult ? "concluído" : "aguardando"}>Resultado</CardTitle>
