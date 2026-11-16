@@ -7,7 +7,6 @@ import { setActivity } from "@/lib/assistant";
 import { logActivity, memoriesStore, prefsStore, reportsStore, tasksStore } from "@/lib/data";
 import { uid } from "@/lib/persisted";
 import { playSound } from "@/lib/sound";
-import { speak } from "@/lib/voice";
 import { readErrorMessage } from "@/lib/ai-context";
 
 /** Keeps the shared conversation saved and mirrors its status in the hologram. */
@@ -102,7 +101,6 @@ export function ChatBridge() {
         playSound("receive");
         const text = messageText(last);
         logActivity(`TUNAVI respondeu: ${text.slice(0, 48)}${text.length > 48 ? "…" : ""}`);
-        if (prefsStore.get().autoSpeak && text) speak(text);
       }
     }
   }, [status, messages]);
