@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Hologram3D } from "./Hologram3D";
 import { useFacePresence } from "@/hooks/useFacePresence";
@@ -32,6 +33,7 @@ export function Hologram({
   className?: string;
   forceState?: AssistantState;
 }) {
+  const [avatarRuntime, setAvatarRuntime] = useState<"loading" | "loaded" | "fallback" | "unavailable">("loading");
   const live = useAssistantState();
   const faceTracking = useFacePresence();
   const state = forceState ?? live.state;
@@ -132,7 +134,7 @@ export function Hologram({
         >
         {/* Volumetric 3D face is layered over the original hologram as a visual fallback. */}
         <div className="pointer-events-none absolute inset-0 z-10" style={{ transform: "translateZ(28px)" }}>
-          <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} gaze={faceTracking.faceDetected ? faceTracking.gaze : null} />
+          <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} gaze={faceTracking.faceDetected ? faceTracking.gaze : null} onStatus={setAvatarRuntime} />
         </div>
         {/* Original realistic bust, projected as a violet hologram */}
         <div
@@ -268,6 +270,10 @@ export function Hologram({
             </div>
           </div>
         )}
+
+        <div role="status" aria-live="polite" className="absolute right-5 bottom-10 z-20 rounded-full border border-lav/20 bg-[#10091f]/80 px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-violet-200/80 backdrop-blur" title="Estado de carregamento do avatar 3D">
+          {avatarRuntime === "loading" ? "Carregando avatar 3D…" : avatarRuntime === "loaded" ? "Avatar VRM ativo" : avatarRuntime === "fallback" ? "Modo holograma reserva" : "3D indisponível · modo reserva"}
+        </div>
 
         {/* Status pill */}
         <div className="absolute -bottom-1 flex h-8 items-center gap-2 rounded-full px-4 font-mono text-[11px] uppercase tracking-[0.2em] text-lav/80 ring-1 ring-lav/15 glass">
