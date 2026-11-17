@@ -123,7 +123,6 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         // Eyes, irises and brows are grouped so the lids can blink naturally.
         const eyes: any[] = [];
         const brows: any[] = [];
-        const brows: any[] = [];
         for (const side of [-1, 1]) {
           const eye = new THREE.Group();
           eye.position.set(side * 0.275, 0.105, 0.525);
@@ -186,7 +185,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
           const thinking = currentState === "processando";
           head.rotation.y += ((pointerX + (thinking ? Math.sin(t * 0.7) * 0.08 : 0)) - head.rotation.y) * 0.055;
           head.rotation.x += ((-pointerY + Math.sin(t * 0.65) * 0.018) - head.rotation.x) * 0.05;
-          head.rotation.z = Math.sin(t * 0.55) * (currentState === "ouvindo" ? 0.025 : 0.012);
+          const expressionTilt = expressionRef.current === "curious" ? 0.035 : 0;
+          head.rotation.z += ((Math.sin(t * 0.55) * (currentState === "ouvindo" ? 0.025 : 0.012) + expressionTilt) - head.rotation.z) * 0.06;
           hologram.position.y = Math.sin(t * 1.2) * 0.035;
           const currentViseme = visemeRef.current;
           const currentExpression = expressionRef.current;
@@ -201,7 +201,6 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
             brow.position.y += (0.27 + lift - brow.position.y) * 0.12;
             brow.rotation.z += (side * (currentExpression === "curious" ? -0.18 : currentExpression === "serious" ? 0.13 : -0.1) - brow.rotation.z) * 0.12;
           });
-          head.rotation.z += ((currentExpression === "curious" ? 0.035 : 0) - head.rotation.z) * 0.04;
 
           const blinkCycle = t % 4.6;
           const blink = blinkCycle > 0.12 && blinkCycle < 0.29 ? Math.sin(((blinkCycle - 0.12) / 0.17) * Math.PI) : 0;
