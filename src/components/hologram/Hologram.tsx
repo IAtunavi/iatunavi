@@ -32,6 +32,7 @@ export function Hologram({
 }) {
   const live = useAssistantState();
   const state = forceState ?? live.state;
+  const mouthLevel = state === "respondendo" ? Math.max(0.18, live.mouthLevel) : 0;
   const W = 360;
   const H = 340;
 
@@ -130,8 +131,8 @@ export function Hologram({
           {state === "respondendo" && (
             <span
               aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-[71.5%] h-[5px] w-[19px] -translate-x-1/2 rounded-[50%] border border-violet-200/70 bg-[#160d25]/90 shadow-[0_0_7px_rgba(196,181,253,.85)]"
-              style={{ animation: "holo-mouth 180ms ease-in-out infinite alternate", transformOrigin: "center" }}
+              className="pointer-events-none absolute left-1/2 top-[71.5%] -translate-x-1/2 rounded-[50%] border border-violet-200/80 bg-[#160d25]/90 shadow-[0_0_7px_rgba(196,181,253,.85)] transition-[width,height,opacity] duration-100"
+              style={{ width: `${13 + mouthLevel * 13}px`, height: `${2 + mouthLevel * 7}px`, opacity: 0.7 + mouthLevel * 0.3, transformOrigin: "center" }}
             />
           )}
           {state === "respondendo" && <div className="pointer-events-none absolute inset-0 bg-violet-300/10" style={{animation:"holo-flicker .8s linear infinite"}}/>}
