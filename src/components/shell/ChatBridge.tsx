@@ -32,32 +32,32 @@ export function ChatBridge() {
             let output: Record<string, unknown> = { ok: true };
             if (name === "navegar_modulo") {
               const paths: Record<string, string> = { dashboard:"/", "meu-espaco":"/meu-espaco", projetos:"/projetos", tarefas:"/tarefas", pesquisa:"/pesquisa", criador:"/criador", agentes:"/agentes", memoria:"/memoria", voz:"/voz", integracoes:"/integracoes", desktop:"/desktop", seguranca:"/seguranca", configuracoes:"/configuracoes", "super-painel":"/super-painel" };
-              const path = paths[String(input.modulo)];
+              const path = paths[String(input["modulo"])];
               if (!path) throw new Error("Módulo não reconhecido.");
               await navigate({ to: path as never });
-              output = { ok:true, modulo:input.modulo, path };
-              toast.success("Abrindo " + String(input.modulo).replaceAll("-", " ") + ".");
+              output = { ok:true, modulo:input["modulo"], path };
+              toast.success("Abrindo " + String(input["modulo"]).replaceAll("-", " ") + ".");
             } else if (name === "abrir_aba_externa") {
-              const url = new URL(String(input.url));
+              const url = new URL(String(input["url"]));
               if (!["https:","http:"].includes(url.protocol)) throw new Error("Somente links HTTP ou HTTPS são permitidos.");
-              output = { ok:true, url:url.toString(), titulo:input.titulo, requiresUserAction:true };
+              output = { ok:true, url:url.toString(), titulo:input["titulo"], requiresUserAction:true };
               toast.info("Link preparado. Clique no cartão para abrir em nova aba.");
             } else if (name === "gerar_relatorio") {
-              const metrics = Array.isArray(input.metricas) ? input.metricas as {label:string;valor:string}[] : [];
-              const content = [String(input.resumo), ...metrics.map((m) => `- **${m.label}:** ${m.valor}`), String(input.conteudo_markdown)].join("\n\n");
+              const metrics = Array.isArray(input["metricas"]) ? input["metricas"] as {label:string;valor:string}[] : [];
+              const content = [String(input["resumo"]), ...metrics.map((m) => `- **${m.label}:** ${m.valor}`), String(input["conteudo_markdown"])].join("\n\n");
               const id = uid();
-              reportsStore.set((prev) => [{ id, topic:String(input.titulo), content, createdAt:Date.now() }, ...prev]);
-              output = { ok:true, id, titulo:input.titulo, categoria:input.categoria };
+              reportsStore.set((prev) => [{ id, topic:String(input["titulo"]), content, createdAt:Date.now() }, ...prev]);
+              output = { ok:true, id, titulo:input["titulo"], categoria:input["categoria"] };
               toast.success("Relatório registrado com sucesso.");
             } else if (name === "adicionar_tarefa") {
               const id = uid();
-              tasksStore.set((prev) => [{ id, title:String(input.titulo), status:"todo", priority:input.prioridade as "baixa"|"media"|"alta", due:String(input.prazo || ""), createdAt:Date.now() }, ...prev]);
-              logActivity("Tarefa criada pela TUNAVI: " + String(input.titulo));
-              output = { ok:true, id, titulo:input.titulo, prioridade:input.prioridade, prazo:input.prazo };
+              tasksStore.set((prev) => [{ id, title:String(input["titulo"]), status:"todo", priority:input["prioridade"] as "baixa"|"media"|"alta", due:String(input["prazo"] || ""), createdAt:Date.now() }, ...prev]);
+              logActivity("Tarefa criada pela TUNAVI: " + String(input["titulo"]));
+              output = { ok:true, id, titulo:input["titulo"], prioridade:input["prioridade"], prazo:input["prazo"] };
               toast.success("Tarefa adicionada ao Dashboard.");
             } else if (name === "salvar_memoria") {
-              const kind = input.tipo as "fato"|"preferencia"|"contexto";
-              const content = String(input.conteudo).trim();
+              const kind = input["tipo"] as "fato"|"preferencia"|"contexto";
+              const content = String(input["conteudo"]).trim();
               if (/senha|password|token|api.?key|cart[aã]o|cvv/i.test(content)) throw new Error("Não posso guardar senhas, chaves ou dados de pagamento.");
               const existing = memoriesStore.get().find((m) => m.text.toLocaleLowerCase("pt-BR") === content.toLocaleLowerCase("pt-BR"));
               if (existing) {
@@ -70,7 +70,7 @@ export function ChatBridge() {
                 toast.success("Memória salva para conversas futuras.");
               }
             } else if (name === "buscar_memorias") {
-              const terms = String(input.consulta).toLocaleLowerCase("pt-BR").split(/\s+/).filter((x) => x.length > 2);
+              const terms = String(input["consulta"]).toLocaleLowerCase("pt-BR").split(/\s+/).filter((x) => x.length > 2);
               const found = memoriesStore.get().map((m) => ({...m, score:terms.filter((term) => m.text.toLocaleLowerCase("pt-BR").includes(term)).length})).filter((m) => m.score > 0).sort((a,b) => b.score-a.score).slice(0,8);
               output = { ok:true, resultados:found.map(({id,kind,text,createdAt})=>({id,tipo:kind,conteudo:text,criada_em:new Date(createdAt).toISOString()})), total:found.length };
             } else if (name === "controlar_player_hud") {
