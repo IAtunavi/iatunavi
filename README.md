@@ -59,4 +59,4 @@ O componente `Hologram3D` tenta carregar um modelo VRM humano e mantém o avatar
 - O runtime carrega Three.js e three-vrm sob demanda por ESM CDN; o restante do assistente continua utilizável se o carregamento falhar.
 - O avatar usa olhar direcionado ao cursor, expressões VRM disponíveis, piscadas e visemas aproximados derivados dos eventos de fala do navegador.
 
-O modelo padrão é um avatar estilizado, não um humano fotorealista. Para uma identidade visual exclusiva e realismo cinematográfico, substitua-o por um VRM/GLB personalizado com licença adequada e rig facial completo.
+O modelo padrão é um avatar estilizado, não um humano fotorealista. Para uma identidade visual exclusiva e realismo cinematográfico, substitua-o por um VRM/GLB personalizado com licença adequada e rig facial completo. A variável `VITE_TUNAVI_AVATAR_VRM` deve ser definida no ambiente de build do frontend e conter uma URL HTTPS acessível pelo navegador.
