@@ -71,9 +71,11 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         const vrmUrl = configuredVrmUrl || "https://arweave.net/gwG7w4bY-A5c3R6A6GOz3xBCgbPvkFQmqPIDtvnNsYI";
         void (async () => {
           try {
+            const loaderModuleUrl = "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.180.0";
+            const vrmModuleUrl = "https://esm.sh/@pixiv/three-vrm@3.4.2?deps=three@0.180.0";
             const [loaderModule, vrmModule] = await Promise.all([
-              import(/* @vite-ignore */ "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.180.0"),
-              import(/* @vite-ignore */ "https://esm.sh/@pixiv/three-vrm@3.4.2?deps=three@0.180.0"),
+              import(/* @vite-ignore */ loaderModuleUrl),
+              import(/* @vite-ignore */ vrmModuleUrl),
             ]);
             if (disposed) return;
             const loader = new loaderModule.GLTFLoader();
@@ -114,7 +116,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
               fallback.style.opacity = "0";
               fallback.style.transition = "opacity 700ms ease";
             }
-            canvas.dataset.avatarLoaded = "true";
+            canvas.dataset["avatarLoaded"] = "true";
           } catch (error) {
             console.warn("[TUNAVI] Não foi possível carregar o modelo VRM; usando o holograma de reserva.", error);
           }
