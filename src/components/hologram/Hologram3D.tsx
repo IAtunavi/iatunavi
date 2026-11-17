@@ -41,8 +41,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 30);
-        camera.position.set(0, -0.95, 8.2);
-        camera.lookAt(0, -0.95, 0);
+        camera.position.set(0, -1.15, 10.2);
+        camera.lookAt(0, -1.15, 0);
 
         renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -101,8 +101,9 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
         // Load a CC0 VRM human model asynchronously. The procedural bust remains
         // visible until the real model is ready, and is kept as an offline fallback.
         const configuredVrmUrl = (import.meta as any).env?.VITE_TUNAVI_AVATAR_VRM as string | undefined;
-        const vrmUrl = configuredVrmUrl || "https://arweave.net/gwG7w4bY-A5c3R6A6GOz3xBCgbPvkFQmqPIDtvnNsYI";
-        void (async () => {
+        const vrmUrl = configuredVrmUrl;
+        if (vrmUrl) {
+          void (async () => {
           try {
             const loaderModuleUrl = "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.180.0";
             const vrmModuleUrl = "https://esm.sh/@pixiv/three-vrm@3.4.2?deps=three@0.180.0";
@@ -160,7 +161,11 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
             console.warn("[TUNAVI] Não foi possível carregar o modelo VRM; usando o holograma de reserva.", error);
             if (!disposed) onStatus?.("fallback");
           }
-        })();
+          })();
+        } else {
+          onStatus?.("fallback");
+          canvas.dataset["avatarLoaded"] = "procedural-full-body";
+        }
         const head = new THREE.Group();
         head.position.y = 0.55;
         hologram.add(head);
