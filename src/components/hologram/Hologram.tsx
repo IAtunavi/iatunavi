@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useFacePresence } from "@/hooks/useFacePresence";
 import bust from "@/assets/tunavi-bust.jpg";
@@ -35,7 +34,13 @@ export function Hologram({
   const live = useAssistantState();
   const faceTracking = useFacePresence();
   const state = forceState ?? live.state;
-  const mouthLevel = state === "respondendo" ? Math.max(0.18, live.mouthLevel) : 0;
+  const mouthLevel = state === "respondendo" ? live.mouthLevel : 0;
+  const viseme = state === "respondendo" ? live.viseme : "rest";
+  const gazeX = faceTracking.faceDetected && faceTracking.gaze ? faceTracking.gaze.x : 0;
+  const gazeY = faceTracking.faceDetected && faceTracking.gaze ? faceTracking.gaze.y : 0;
+  const headTransform = "translate3d(" + gazeX * 5 + "px," + gazeY * 3 + "px,0) rotateY(" + gazeX * 7 + "deg) rotateX(" + -gazeY * 4 + "deg)";
+  const mouthWidth = viseme === "wide" ? 19 : viseme === "round" ? 9 : viseme === "closed" ? 10 : viseme === "teeth" ? 15 : 8 + mouthLevel * 13;
+  const mouthHeight = viseme === "closed" ? 1 : viseme === "wide" ? 4 + mouthLevel * 3 : viseme === "round" ? 8 + mouthLevel * 3 : viseme === "teeth" ? 3 + mouthLevel * 3 : 1.5 + mouthLevel * 8;
   const W = 360;
   const H = 440;
 
@@ -137,14 +142,14 @@ export function Hologram({
           <img src={bust} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain object-bottom"
             style={{filter:"grayscale(1) sepia(.35) hue-rotate(220deg) saturate(3.2) contrast(1.28) brightness(1.08)",opacity:.9,mixBlendMode:"screen",transform:"scale(1.04)"}} />
           <div className="pointer-events-none absolute inset-0" style={{background:"linear-gradient(180deg, rgba(196,181,253,.10), rgba(124,58,237,.34)), radial-gradient(55% 48% at 50% 36%, rgba(221,214,254,.28), transparent 75%)",mixBlendMode:"screen"}} />
-          <div aria-hidden="true" className="pointer-events-none absolute left-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full" style={{background:"radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)",filter:"blur(1px)",opacity:state==="ouvindo"?1:.45,animation:state==="ouvindo"?"holo-eye-focus 1.1s ease-in-out infinite alternate":"holo-eye-rest 4.5s ease-in-out infinite"}} />
+          <div aria-hidden="true" className="pointer-events-none absolute left-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full" style={{background:"radial-gradient(ellipse, rgba(221,214,254,.98), rgba(167,139,250,.3) 55%, transparent 78%)",filter:"blur(1px)",opacity:state==="ouvindo"?1:.55,transform:"translate("+gazeX*3+"px,"+gazeY*2+"px)",animation:"holo-eye-rest 4.5s ease-in-out infinite"}} />
           <div aria-hidden="true" className="pointer-events-none absolute right-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full" style={{background:"radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)",filter:"blur(1px)",opacity:state==="ouvindo"?1:.45,animation:state==="ouvindo"?"holo-eye-focus 1.1s ease-in-out infinite alternate":"holo-eye-rest 4.5s ease-in-out infinite"}} />
           <div className="pointer-events-none absolute inset-0 scanlines opacity-80" />
           <div className="pointer-events-none absolute inset-0 opacity-45" style={{background:"repeating-linear-gradient(90deg, transparent 0 7px, rgba(196,181,253,.12) 7px 8px), linear-gradient(0deg, transparent 0 48%, rgba(221,214,254,.28) 50%, transparent 52%)"}} />
           <div className="pointer-events-none absolute inset-x-5 top-0 h-full" style={{background:"linear-gradient(180deg, transparent 0%, rgba(221,214,254,.20) 48%, transparent 52%, transparent 100%)",animation:"holo-scan 3.8s linear infinite"}} />
           <div className="pointer-events-none absolute inset-0" style={{boxShadow:"inset 0 0 42px rgba(124,58,237,.38)"}} />
           {state === "respondendo" && <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[71.5%] -translate-x-1/2 rounded-[50%] border border-violet-200/80 bg-[#160d25]/90 shadow-[0_0_7px_rgba(196,181,253,.85)] transition-all duration-75"
-            style={{width:live.viseme==="wide"?19:live.viseme==="round"?9:live.viseme==="closed"?12:13+mouthLevel*13,height:live.viseme==="closed"?1:live.viseme==="wide"?4:live.viseme==="round"?9:2+mouthLevel*7,opacity:live.viseme==="rest"?.25:.7+mouthLevel*.3,transform:live.viseme==="wide"?"translateX(-50%) scaleX(1.25)":"translateX(-50%)"}} />}
+            style={{width:mouthWidth,height:mouthHeight,opacity:viseme==="rest"?.12:.55+mouthLevel*.45,transform:viseme==="wide"?"translateX(-50%) scaleX(1.3)":viseme==="round"?"translateX(-50%) scaleX(.8)":"translateX(-50%)",transition:"width 55ms linear,height 55ms linear,opacity 70ms linear"}} />}
           <div aria-hidden="true" className="pointer-events-none absolute left-[38%] top-[59.5%] h-[2px] w-[12%] rounded-full bg-violet-100/70" style={{transform:live.expression==="curious"?"rotate(-9deg)":live.expression==="serious"?"rotate(7deg)":"rotate(0deg)",opacity:live.expression==="neutral"?.15:.75,filter:"blur(.5px)"}} />
           <div aria-hidden="true" className="pointer-events-none absolute right-[38%] top-[59.5%] h-[2px] w-[12%] rounded-full bg-violet-100/70" style={{transform:live.expression==="curious"?"rotate(9deg)":live.expression==="serious"?"rotate(-7deg)":"rotate(0deg)",opacity:live.expression==="neutral"?.15:.75,filter:"blur(.5px)"}} />
           <div className="pointer-events-none absolute inset-0" style={{background:state==="respondendo"?"rgba(196,181,253,.06)":"transparent",animation:state==="respondendo"?"holo-flicker .8s linear infinite":undefined}} />
