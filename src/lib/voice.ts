@@ -154,7 +154,7 @@ export function useWakeWord(onWake: () => void, enabled: boolean) {
         recognition.onresult = (event) => {
           for (let i = event.resultIndex; i < event.results.length; i++) {
             const transcript = event.results[i]?.[0]?.transcript?.toLocaleLowerCase("pt-BR") ?? "";
-            if (/ol[aá]\s*,?\s*tunavi|ol[aá]\s+tunavi/.test(transcript)) {
+            if (/^\s*ol[aá]\b/.test(transcript)) {
               wakePending = true;
               recognition?.stop();
               break;
