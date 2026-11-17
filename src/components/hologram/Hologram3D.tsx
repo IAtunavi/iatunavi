@@ -1,13 +1,13 @@
 import { useEffect, useRef } from "react";
 import type { AssistantState } from "@/lib/assistant";
 
-type Props = { state: AssistantState; mouthLevel: number };
+type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";\ntype FaceExpression = "neutral" | "friendly" | "curious" | "serious";\ntype Props = { state: AssistantState; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression };
 
 /**
  * Lightweight procedural 3D bust. Three.js is loaded on demand so the rest of
  * the assistant remains usable if WebGL or the external module CDN is blocked.
  */
-export function Hologram3D({ state, mouthLevel }: Props) {
+export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef(state);
   const mouthRef = useRef(mouthLevel);
@@ -115,7 +115,7 @@ export function Hologram3D({ state, mouthLevel }: Props) {
         }
 
         // Eyes, irises and brows are grouped so the lids can blink naturally.
-        const eyes: any[] = [];
+        const eyes: any[] = [];\n        const brows: any[] = [];
         for (const side of [-1, 1]) {
           const eye = new THREE.Group();
           eye.position.set(side * 0.275, 0.105, 0.525);
