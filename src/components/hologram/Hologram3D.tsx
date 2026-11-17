@@ -3,13 +3,14 @@ import type { AssistantState } from "@/lib/assistant";
 
 type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
 type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
-type Props = { state: AssistantState; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression; gaze?: { x: number; y: number } | null };
+type AvatarRuntimeStatus = "loading" | "loaded" | "fallback" | "unavailable";
+type Props = { state: AssistantState; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression; gaze?: { x: number; y: number } | null; onStatus?: (status: AvatarRuntimeStatus) => void };
 
 /**
  * Lightweight procedural 3D bust. Three.js is loaded on demand so the rest of
  * the assistant remains usable if WebGL or the external module CDN is blocked.
  */
-export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null }: Props) {
+export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null, onStatus }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef(state);
   const mouthRef = useRef(mouthLevel);
@@ -28,6 +29,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
 
     let disposed = false;
     let frame = 0;
+    onStatus?.("loading");
     let renderer: any;
     let resizeObserver: ResizeObserver | undefined;
 
@@ -127,8 +129,10 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
               fallback.style.transition = "opacity 700ms ease";
             }
             canvas.dataset["avatarLoaded"] = "true";
+            onStatus?.("loaded");
           } catch (error) {
             console.warn("[TUNAVI] Não foi possível carregar o modelo VRM; usando o holograma de reserva.", error);
+            if (!disposed) onStatus?.("fallback");
           }
         })();
         const head = new THREE.Group();
@@ -373,6 +377,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
         };
       } catch (error) {
         console.warn("[TUNAVI] Avatar 3D indisponível; mantendo holograma de reserva.", error);
+        if (!disposed) onStatus?.("unavailable");
         return undefined;
       }
     };
