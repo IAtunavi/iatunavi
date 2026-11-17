@@ -308,6 +308,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         };
       } catch (error) {
         console.warn("[TUNAVI] Avatar 3D indisponível; mantendo holograma de reserva.", error);
+        return undefined;
       }
     };
 
