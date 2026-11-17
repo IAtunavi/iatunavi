@@ -113,7 +113,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
             vrm.scene.position.set(-center.x * scale, -center.y * scale + 0.02, -center.z * scale);
             scene.add(vrm.scene);
             const humanoid = vrm.humanoid;
-            const boneNames = ["hips", "spine", "chest", "neck", "head", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand"];
+            const boneNames = ["hips", "spine", "chest", "neck", "head", "leftShoulder", "rightShoulder", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand"];
             for (const name of boneNames) {
               const bone = humanoid?.getNormalizedBoneNode?.(name);
               if (bone) bodyBones[name] = { bone, rest: { x: bone.rotation.x, y: bone.rotation.y, z: bone.rotation.z } };
@@ -287,25 +287,32 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
           skin.emissiveIntensity = glow;
 
           if (vrm) {
-            // Smooth idle posture, listening nods and alternating speaking gestures.
-            const speakingGesture = talking ? Math.sin(t * 3.2) : 0;
-            const listeningNod = currentState === "ouvindo" ? Math.sin(t * 1.8) * 0.035 : 0;
+            // State-aware body language: welcoming while listening, thoughtful while
+            // processing, open-handed while speaking, and confident while executing.
+            const listening = currentState === "ouvindo";
+            const executing = currentState === "executando";
+            const speakingGesture = talking ? Math.sin(t * 2.7) : 0;
+            const listeningNod = listening ? Math.sin(t * 1.65) * 0.04 : 0;
+            const welcome = listening ? 0.5 + Math.sin(t * 1.1) * 0.08 : 0;
+            const think = thinking ? 1 : 0;
             const gestureTargets: Record<string, { x: number; y: number; z: number }> = {
-              hips: { x: 0, y: Math.sin(t * 0.45) * 0.018, z: 0 },
-              spine: { x: listeningNod - (talking ? 0.025 : 0), y: Math.sin(t * 0.8) * 0.018, z: 0 },
-              chest: { x: talking ? -0.035 : 0, y: Math.sin(t * 0.65) * 0.025, z: 0 },
-              neck: { x: listeningNod, y: pointerX * 0.12, z: 0 },
-              leftUpperArm: { x: talking ? -0.12 - Math.max(0, speakingGesture) * 0.12 : -0.025, y: 0, z: talking ? 0.12 + Math.max(0, speakingGesture) * 0.1 : 0.035 },
-              rightUpperArm: { x: talking ? -0.12 - Math.max(0, -speakingGesture) * 0.12 : -0.025, y: 0, z: talking ? -0.12 - Math.max(0, -speakingGesture) * 0.1 : -0.035 },
-              leftLowerArm: { x: talking ? -0.18 - Math.max(0, speakingGesture) * 0.22 : -0.04, y: 0, z: 0 },
-              rightLowerArm: { x: talking ? -0.18 - Math.max(0, -speakingGesture) * 0.22 : -0.04, y: 0, z: 0 },
-              leftHand: { x: 0, y: 0, z: talking ? 0.08 : 0 },
-              rightHand: { x: 0, y: 0, z: talking ? -0.08 : 0 },
+              hips: { x: 0, y: Math.sin(t * 0.42) * 0.018, z: Math.sin(t * 0.5) * 0.008 },
+              spine: { x: listeningNod - (talking ? 0.025 : 0) + think * 0.035, y: Math.sin(t * 0.72) * 0.018, z: 0 },
+              chest: { x: talking ? -0.035 : think * 0.025, y: Math.sin(t * 0.62) * 0.025, z: 0 },
+              neck: { x: listeningNod + think * -0.025, y: pointerX * 0.12, z: expressionRef.current === "curious" ? 0.035 : 0 },
+              leftShoulder: { x: 0, y: 0, z: listening ? 0.035 : 0 },
+              rightShoulder: { x: 0, y: 0, z: listening ? -0.035 : 0 },
+              leftUpperArm: { x: talking ? -0.1 - Math.max(0, speakingGesture) * 0.13 : listening ? -0.18 : thinking ? -0.34 : executing ? -0.22 : -0.025, y: 0, z: talking ? 0.13 + Math.max(0, speakingGesture) * 0.12 : listening ? 0.12 + welcome * 0.13 : thinking ? 0.24 : executing ? 0.09 : 0.035 },
+              rightUpperArm: { x: talking ? -0.1 - Math.max(0, -speakingGesture) * 0.13 : listening ? -0.18 : thinking ? -0.08 : executing ? -0.22 : -0.025, y: 0, z: talking ? -0.13 - Math.max(0, -speakingGesture) * 0.12 : listening ? -0.12 - welcome * 0.13 : thinking ? -0.035 : executing ? -0.09 : -0.035 },
+              leftLowerArm: { x: talking ? -0.16 - Math.max(0, speakingGesture) * 0.24 : listening ? -0.12 : thinking ? -0.62 : executing ? -0.2 : -0.04, y: 0, z: listening ? 0.04 : 0 },
+              rightLowerArm: { x: talking ? -0.16 - Math.max(0, -speakingGesture) * 0.24 : listening ? -0.12 : thinking ? -0.08 : executing ? -0.2 : -0.04, y: 0, z: listening ? -0.04 : 0 },
+              leftHand: { x: 0, y: 0, z: talking ? 0.1 : listening ? 0.08 : 0 },
+              rightHand: { x: 0, y: 0, z: talking ? -0.1 : listening ? -0.08 : 0 },
             };
             for (const [name, target] of Object.entries(gestureTargets)) {
               const entry = bodyBones[name];
               if (!entry) continue;
-              const smooth = name.includes("Arm") || name.includes("Hand") ? 0.09 : 0.055;
+              const smooth = name.includes("Arm") || name.includes("Hand") || name.includes("Shoulder") ? 0.075 : 0.05;
               entry.bone.rotation.x += (entry.rest.x + target.x - entry.bone.rotation.x) * smooth;
               entry.bone.rotation.y += (entry.rest.y + target.y - entry.bone.rotation.y) * smooth;
               entry.bone.rotation.z += (entry.rest.z + target.z - entry.bone.rotation.z) * smooth;
