@@ -68,12 +68,12 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         // Load a CC0 VRM human model asynchronously. The procedural bust remains
         // visible until the real model is ready, and is kept as an offline fallback.
         const configuredVrmUrl = (import.meta as any).env?.VITE_TUNAVI_AVATAR_VRM as string | undefined;
-        const vrmUrl = configuredVrmUrl || "https://raw.githubusercontent.com/madjin/vrm-samples/master/Avatar_Orion.vrm";
+        const vrmUrl = configuredVrmUrl || "https://arweave.net/gwG7w4bY-A5c3R6A6GOz3xBCgbPvkFQmqPIDtvnNsYI";
         void (async () => {
           try {
             const [loaderModule, vrmModule] = await Promise.all([
-              import(/* @vite-ignore */ "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js?external=three"),
-              import(/* @vite-ignore */ "https://esm.sh/@pixiv/three-vrm@3.4.2?external=three"),
+              import(/* @vite-ignore */ "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.180.0"),
+              import(/* @vite-ignore */ "https://esm.sh/@pixiv/three-vrm@3.4.2?deps=three@0.180.0"),
             ]);
             if (disposed) return;
             const loader = new loaderModule.GLTFLoader();
@@ -102,9 +102,9 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
             const bounds = new THREE.Box3().setFromObject(vrm.scene);
             const size = bounds.getSize(new THREE.Vector3());
             const center = bounds.getCenter(new THREE.Vector3());
-            const scale = 2.55 / Math.max(size.y, 0.01);
+            const scale = 4.1 / Math.max(size.y, 0.01);
             vrm.scene.scale.setScalar(scale);
-            vrm.scene.position.set(-center.x * scale, -center.y * scale + 0.05, -center.z * scale);
+            vrm.scene.position.set(-center.x * scale, -center.y * scale - 0.72, -center.z * scale);
             scene.add(vrm.scene);
             vrmHead = vrm.humanoid?.getNormalizedBoneNode?.("head") ?? null;
             if (vrm.lookAt) vrm.lookAt.target = lookTarget;
@@ -279,7 +279,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
             }
             const expressions = vrm.expressionManager;
             if (expressions) {
-              const visemePreset: Record<VoiceViseme, string> = { rest: "relaxed", open: "aa", wide: "ih", round: "ou", closed: "blink", teeth: "ee" };
+              const visemePreset: Record<VoiceViseme, string> = { rest: "relaxed", open: "aa", wide: "ih", round: "ou", closed: "relaxed", teeth: "ee" };
               for (const preset of ["aa", "ih", "ou", "ee", "oh", "happy", "angry", "surprised", "relaxed"]) expressions.setValue(preset, 0);
               if (talking && currentViseme !== "rest") expressions.setValue(visemePreset[currentViseme], currentViseme === "closed" ? 0 : Math.max(0.25, mouthRef.current));
               expressions.setValue("happy", currentExpression === "friendly" ? 0.48 : 0);
