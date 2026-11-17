@@ -41,7 +41,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 30);
-        camera.position.set(0, 0.05, 5.2);
+        camera.position.set(0, 0.05, 6.1);
 
         renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
