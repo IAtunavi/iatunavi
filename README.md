@@ -47,3 +47,16 @@ Scripts disponíveis: `npm run build`, `npm run lint` e `npm test`.
 Projeto conectado ao Lovable: https://lovable.dev/projects/d7c48910-540c-46c9-ba57-bb1ddfa28867
 
 Aplicação: https://iatunavi.lovable.app
+
+
+## Avatar humano 3D
+
+O componente `Hologram3D` tenta carregar um modelo VRM humano e mantém o avatar procedural como fallback caso WebGL, a rede ou o modelo falhem.
+
+- Modelo padrão: **Robert**, da coleção 100Avatars Round 1, distribuída sob CC0.
+- Origem do modelo: [Open Source Avatars — 100Avatars R1](https://github.com/ToxSam/open-source-avatars) e [Polygonal Mind — 100Avatars](https://github.com/PolygonalMind/100Avatars).
+- Para substituir o modelo padrão, configure `VITE_TUNAVI_AVATAR_VRM` com a URL pública de um arquivo VRM cujo uso comercial e redistribuição estejam autorizados.
+- O runtime carrega Three.js e three-vrm sob demanda por ESM CDN; o restante do assistente continua utilizável se o carregamento falhar.
+- O avatar usa olhar direcionado ao cursor, expressões VRM disponíveis, piscadas e visemas aproximados derivados dos eventos de fala do navegador.
+
+O modelo padrão é um avatar estilizado, não um humano fotorealista. Para uma identidade visual exclusiva e realismo cinematográfico, substitua-o por um VRM/GLB personalizado com licença adequada e rig facial completo. A variável `VITE_TUNAVI_AVATAR_VRM` deve ser definida no ambiente de build do frontend e conter uma URL HTTPS acessível pelo navegador. O arquivo VRM é baixado diretamente pelo navegador na primeira exibição do avatar, sem ser embutido no bundle JavaScript.

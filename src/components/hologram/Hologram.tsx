@@ -111,7 +111,8 @@ export function Hologram({
         </div>
         {/* Original realistic bust, projected as a violet hologram */}
         <div
-          className="relative mt-0 h-[310px] w-[300px] overflow-hidden holo-mask"
+          data-holo-fallback
+          className="relative mt-0 h-[310px] w-[300px] overflow-hidden holo-mask transition-opacity duration-700"
           style={{
             animation:
               state === "respondendo"

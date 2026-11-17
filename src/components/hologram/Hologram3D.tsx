@@ -59,6 +59,68 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
 
         const hologram = new THREE.Group();
         scene.add(hologram);
+        let vrm: any = null;
+        let vrmHead: any = null;
+        const lookTarget = new THREE.Object3D();
+        lookTarget.position.set(0, 0.1, 4);
+        scene.add(lookTarget);
+
+        // Load a CC0 VRM human model asynchronously. The procedural bust remains
+        // visible until the real model is ready, and is kept as an offline fallback.
+        const configuredVrmUrl = (import.meta as any).env?.VITE_TUNAVI_AVATAR_VRM as string | undefined;
+        const vrmUrl = configuredVrmUrl || "https://arweave.net/gwG7w4bY-A5c3R6A6GOz3xBCgbPvkFQmqPIDtvnNsYI";
+        void (async () => {
+          try {
+            const loaderModuleUrl = "https://esm.sh/three@0.180.0/examples/jsm/loaders/GLTFLoader.js?deps=three@0.180.0";
+            const vrmModuleUrl = "https://esm.sh/@pixiv/three-vrm@3.4.2?deps=three@0.180.0";
+            const [loaderModule, vrmModule] = await Promise.all([
+              import(/* @vite-ignore */ loaderModuleUrl),
+              import(/* @vite-ignore */ vrmModuleUrl),
+            ]);
+            if (disposed) return;
+            const loader = new loaderModule.GLTFLoader();
+            loader.register((parser: any) => new vrmModule.VRMLoaderPlugin(parser));
+            const gltf = await loader.loadAsync(vrmUrl);
+            if (disposed) {
+              vrmModule.VRMUtils.deepDispose(gltf.scene);
+              return;
+            }
+            vrm = gltf.userData.vrm;
+            if (!vrm?.scene) throw new Error("O arquivo carregado não contém um avatar VRM válido.");
+            vrm.scene.traverse((object: any) => {
+              if (object.isMesh && object.material) {
+                const materials = Array.isArray(object.material) ? object.material : [object.material];
+                materials.forEach((material: any) => {
+                  material.transparent = true;
+                  material.opacity = Math.min(material.opacity ?? 1, 0.94);
+                  if (material.emissive) {
+                    material.emissive.set(0x321078);
+                    material.emissiveIntensity = 0.22;
+                  }
+                  material.needsUpdate = true;
+                });
+              }
+            });
+            const bounds = new THREE.Box3().setFromObject(vrm.scene);
+            const size = bounds.getSize(new THREE.Vector3());
+            const center = bounds.getCenter(new THREE.Vector3());
+            const scale = 4.1 / Math.max(size.y, 0.01);
+            vrm.scene.scale.setScalar(scale);
+            vrm.scene.position.set(-center.x * scale, -center.y * scale - 0.72, -center.z * scale);
+            scene.add(vrm.scene);
+            vrmHead = vrm.humanoid?.getNormalizedBoneNode?.("head") ?? null;
+            if (vrm.lookAt) vrm.lookAt.target = lookTarget;
+            hologram.visible = false;
+            const fallback = canvas.closest("[data-holo-depth]")?.querySelector<HTMLElement>("[data-holo-fallback]") ?? null;
+            if (fallback) {
+              fallback.style.opacity = "0";
+              fallback.style.transition = "opacity 700ms ease";
+            }
+            canvas.dataset["avatarLoaded"] = "true";
+          } catch (error) {
+            console.warn("[TUNAVI] Não foi possível carregar o modelo VRM; usando o holograma de reserva.", error);
+          }
+        })();
         const head = new THREE.Group();
         head.position.y = 0.55;
         hologram.add(head);
@@ -179,7 +241,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         const animate = () => {
           if (disposed) return;
           frame = requestAnimationFrame(animate);
-          const t = clock.getElapsedTime();
+          const delta = clock.getDelta();
+          const t = clock.elapsedTime;
           const currentState = stateRef.current;
           const talking = currentState === "respondendo";
           const thinking = currentState === "processando";
@@ -209,6 +272,25 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
 
           const glow = talking ? 1.5 : currentState === "ouvindo" ? 1.25 : 0.95;
           skin.emissiveIntensity = glow;
+
+          if (vrm) {
+            lookTarget.position.set(pointerX * 3.2, 0.12 - pointerY * 2.2, 4);
+            if (vrmHead) {
+              vrmHead.rotation.y += (pointerX * 0.34 - vrmHead.rotation.y) * 0.08;
+              vrmHead.rotation.x += (-pointerY * 0.2 + Math.sin(t * 0.7) * 0.012 - vrmHead.rotation.x) * 0.06;
+            }
+            const expressions = vrm.expressionManager;
+            if (expressions) {
+              const visemePreset: Record<VoiceViseme, string> = { rest: "relaxed", open: "aa", wide: "ih", round: "ou", closed: "relaxed", teeth: "ee" };
+              for (const preset of ["aa", "ih", "ou", "ee", "oh", "happy", "angry", "surprised", "relaxed"]) expressions.setValue(preset, 0);
+              if (talking && currentViseme !== "rest") expressions.setValue(visemePreset[currentViseme], currentViseme === "closed" ? 0 : Math.max(0.25, mouthRef.current));
+              expressions.setValue("happy", currentExpression === "friendly" ? 0.48 : 0);
+              expressions.setValue("surprised", currentExpression === "curious" ? 0.35 : 0);
+              expressions.setValue("angry", currentExpression === "serious" ? 0.22 : 0);
+              expressions.setValue("blink", blink);
+            }
+            vrm.update(delta);
+          }
           renderer.render(scene, camera);
         };
         animate();
@@ -216,6 +298,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         return () => {
           canvas.removeEventListener("pointermove", onPointer);
           canvas.removeEventListener("pointerleave", onLeave);
+          if (vrm?.scene) scene.remove(vrm.scene);
           scene.traverse((object: any) => {
             object.geometry?.dispose?.();
             if (Array.isArray(object.material)) object.material.forEach((material: any) => material.dispose?.());
@@ -225,6 +308,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         };
       } catch (error) {
         console.warn("[TUNAVI] Avatar 3D indisponível; mantendo holograma de reserva.", error);
+        return undefined;
       }
     };
 
