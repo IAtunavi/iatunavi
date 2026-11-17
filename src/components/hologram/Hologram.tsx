@@ -35,7 +35,7 @@ export function Hologram({
   const state = forceState ?? live.state;
   const mouthLevel = state === "respondendo" ? Math.max(0.18, live.mouthLevel) : 0;
   const W = 360;
-  const H = 340;
+  const H = 440;
 
   return (
     <div
@@ -112,7 +112,7 @@ export function Hologram({
         {/* Original realistic bust, projected as a violet hologram */}
         <div
           data-holo-fallback
-          className="relative mt-0 h-[310px] w-[300px] overflow-hidden holo-mask transition-opacity duration-700"
+          className="relative mt-0 h-[410px] w-[300px] overflow-hidden holo-mask transition-opacity duration-700"
           style={{
             animation:
               state === "respondendo"
