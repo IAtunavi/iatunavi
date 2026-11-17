@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { Hologram3D } from "./Hologram3D";
+import { useFacePresence } from "@/hooks/useFacePresence";
 import bust from "@/assets/tunavi-bust.jpg";
 import { STATE_LABEL, useAssistantState, type AssistantState } from "@/lib/assistant";
 
@@ -32,6 +33,7 @@ export function Hologram({
   forceState?: AssistantState;
 }) {
   const live = useAssistantState();
+  const faceTracking = useFacePresence();
   const state = forceState ?? live.state;
   const mouthLevel = state === "respondendo" ? Math.max(0.18, live.mouthLevel) : 0;
   const W = 360;
@@ -41,8 +43,8 @@ export function Hologram({
     <div
       className={cn("relative shrink-0", className)}
       style={{ width: W * scale, height: H * scale, perspective: "1000px", touchAction: "pan-y" }}
-      role="img"
-      aria-label={`Holograma 3D da TUNAVI — ${STATE_LABEL[state]}. Mova o cursor para observar a perspectiva.`}
+      role="group"
+      aria-label={`Holograma 3D da TUNAVI — ${STATE_LABEL[state]}. Mova o cursor ou ative o acompanhamento visual para observar a perspectiva.`}
       data-state={state}
       onPointerMove={(event) => {
         if (event.pointerType === "touch") return;
@@ -72,6 +74,29 @@ export function Hologram({
         <div className="absolute left-[120px] top-0 bottom-8 w-px bg-gradient-to-t from-lav/60 to-transparent" />
         <div className="absolute right-[120px] top-0 bottom-8 w-px bg-gradient-to-t from-lav/60 to-transparent" />
         <div className="absolute left-1/2 top-0 bottom-8 w-px bg-gradient-to-t from-vio to-transparent" />
+
+        {/* Opt-in local face tracking control. No camera starts until the user clicks. */}
+        <div className="pointer-events-auto absolute right-5 top-3 z-30 flex max-w-[190px] flex-col items-end gap-1">
+          <button
+            type="button"
+            onClick={() => faceTracking.active ? faceTracking.stop() : void faceTracking.start()}
+            disabled={!faceTracking.supported}
+            aria-pressed={faceTracking.active}
+            className="rounded-full border border-lav/35 bg-[#10091f]/85 px-3 py-1.5 font-mono text-[9px] uppercase tracking-[0.12em] text-lav shadow-[0_0_14px_rgba(139,92,246,.18)] backdrop-blur transition hover:border-lav/70 hover:bg-violet-950/90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            {faceTracking.active ? "Desativar olhar" : "Ativar olhar"}
+          </button>
+          {faceTracking.active && (
+            <span className="rounded-full bg-[#10091f]/75 px-2 py-1 text-[9px] text-violet-200">
+              {faceTracking.faceDetected ? "Presença detectada" : "Aguardando rosto…"}
+            </span>
+          )}
+          {faceTracking.error && (
+            <span role="status" className="max-w-[180px] rounded-md bg-[#10091f]/90 px-2 py-1 text-right text-[9px] leading-tight text-rose-200">
+              {faceTracking.error}
+            </span>
+          )}
+        </div>
 
         {/* Listening: ripples */}
         {state === "ouvindo" && (
@@ -107,7 +132,7 @@ export function Hologram({
         >
         {/* Volumetric 3D face is layered over the original hologram as a visual fallback. */}
         <div className="pointer-events-none absolute inset-0 z-10" style={{ transform: "translateZ(28px)" }}>
-          <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} />
+          <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} gaze={faceTracking.faceDetected ? faceTracking.gaze : null} />
         </div>
         {/* Original realistic bust, projected as a violet hologram */}
         <div

@@ -3,22 +3,24 @@ import type { AssistantState } from "@/lib/assistant";
 
 type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
 type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
-type Props = { state: AssistantState; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression };
+type Props = { state: AssistantState; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression; gaze?: { x: number; y: number } | null };
 
 /**
  * Lightweight procedural 3D bust. Three.js is loaded on demand so the rest of
  * the assistant remains usable if WebGL or the external module CDN is blocked.
  */
-export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
+export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const stateRef = useRef(state);
   const mouthRef = useRef(mouthLevel);
   const visemeRef = useRef(viseme);
   const expressionRef = useRef(expression);
+  const gazeRef = useRef(gaze);
   stateRef.current = state;
   mouthRef.current = mouthLevel;
   visemeRef.current = viseme;
   expressionRef.current = expression;
+  gazeRef.current = gaze;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -116,7 +118,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
               const bone = humanoid?.getNormalizedBoneNode?.(name);
               if (bone) bodyBones[name] = { bone, rest: { x: bone.rotation.x, y: bone.rotation.y, z: bone.rotation.z } };
             }
-            vrmHead = bodyBones.head?.bone ?? null;
+            vrmHead = bodyBones["head"]?.bone ?? null;
             if (vrm.lookAt) vrm.lookAt.target = lookTarget;
             hologram.visible = false;
             const fallback = canvas.closest("[data-holo-depth]")?.querySelector<HTMLElement>("[data-holo-fallback]") ?? null;
@@ -254,8 +256,11 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
           const currentState = stateRef.current;
           const talking = currentState === "respondendo";
           const thinking = currentState === "processando";
-          head.rotation.y += ((pointerX + (thinking ? Math.sin(t * 0.7) * 0.08 : 0)) - head.rotation.y) * 0.055;
-          head.rotation.x += ((-pointerY + Math.sin(t * 0.65) * 0.018) - head.rotation.x) * 0.05;
+          const trackedGaze = gazeRef.current;
+          const lookX = trackedGaze ? trackedGaze.x * 0.34 : pointerX;
+          const lookY = trackedGaze ? trackedGaze.y * 0.22 : pointerY;
+          head.rotation.y += ((lookX + (thinking ? Math.sin(t * 0.7) * 0.08 : 0)) - head.rotation.y) * 0.055;
+          head.rotation.x += ((-lookY + Math.sin(t * 0.65) * 0.018) - head.rotation.x) * 0.05;
           const expressionTilt = expressionRef.current === "curious" ? 0.035 : 0;
           head.rotation.z += ((Math.sin(t * 0.55) * (currentState === "ouvindo" ? 0.025 : 0.012) + expressionTilt) - head.rotation.z) * 0.06;
           hologram.position.y = Math.sin(t * 1.2) * 0.035;
@@ -305,10 +310,10 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
               entry.bone.rotation.y += (entry.rest.y + target.y - entry.bone.rotation.y) * smooth;
               entry.bone.rotation.z += (entry.rest.z + target.z - entry.bone.rotation.z) * smooth;
             }
-            lookTarget.position.set(pointerX * 3.2, 0.12 - pointerY * 2.2, 4);
+            lookTarget.position.set(lookX * 3.2, 0.12 - lookY * 2.2, 4);
             if (vrmHead) {
-              vrmHead.rotation.y += (pointerX * 0.34 - vrmHead.rotation.y) * 0.08;
-              vrmHead.rotation.x += (-pointerY * 0.2 + Math.sin(t * 0.7) * 0.012 - vrmHead.rotation.x) * 0.06;
+              vrmHead.rotation.y += (lookX * 0.34 - vrmHead.rotation.y) * 0.08;
+              vrmHead.rotation.x += (-lookY * 0.2 + Math.sin(t * 0.7) * 0.012 - vrmHead.rotation.x) * 0.06;
             }
             const expressions = vrm.expressionManager;
             if (expressions) {
