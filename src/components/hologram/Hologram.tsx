@@ -2,7 +2,6 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Hologram3D } from "./Hologram3D";
 import { useFacePresence } from "@/hooks/useFacePresence";
-import bust from "@/assets/tunavi-bust.jpg";
 import { STATE_LABEL, useAssistantState, type AssistantState } from "@/lib/assistant";
 
 const PARTICLES = [
@@ -126,7 +125,7 @@ export function Hologram({
           </div>
         )}
 
-        {/* The portrait sits on a depth-aware stage for real-time 3D parallax. */}
+        {/* The 3D avatar sits on a depth-aware stage for real-time parallax. */}
         <div
           data-holo-depth
           className="relative"
@@ -136,69 +135,7 @@ export function Hologram({
         <div className="pointer-events-none absolute inset-0 z-10" style={{ transform: "translateZ(28px)" }}>
           <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} gaze={faceTracking.faceDetected ? faceTracking.gaze : null} onStatus={setAvatarRuntime} />
         </div>
-        {/* Original realistic bust, projected as a violet hologram */}
-        <div
-          data-holo-fallback
-          className="relative mt-0 h-[410px] w-[300px] overflow-hidden holo-mask transition-opacity duration-700"
-          style={{
-            animation:
-              state === "respondendo"
-                ? "holo-pulse-glow 1.2s ease-in-out infinite, holo-head-speak 2.8s ease-in-out infinite"
-                : state === "ouvindo"
-                  ? "holo-head-listen 3.2s ease-in-out infinite"
-                  : state === "processando"
-                    ? "holo-head-think 2.6s ease-in-out infinite"
-                    : state === "executando"
-                      ? "holo-head-execute 2.2s ease-in-out infinite"
-                      : "holo-head-rest 5s ease-in-out infinite",
-            filter: "drop-shadow(0 0 22px color-mix(in oklab, var(--vio) 55%, transparent))",
-          }}
-        >
-          <img
-            src={bust}
-            alt=""
-            aria-hidden="true"
-            className="absolute inset-0 h-full w-full object-contain object-bottom"
-            style={{
-              filter: "grayscale(1) sepia(.35) hue-rotate(220deg) saturate(3.2) contrast(1.28) brightness(1.08)",
-              opacity: 0.9,
-              mixBlendMode: "screen",
-              transform: "translateZ(18px) scale(1.04)",
-              backfaceVisibility: "hidden",
-            }}
-          />
-          <div className="pointer-events-none absolute inset-0" style={{background:"linear-gradient(180deg, rgba(196,181,253,.10), rgba(124,58,237,.34)), radial-gradient(55% 48% at 50% 36%, rgba(221,214,254,.28), transparent 75%)",mixBlendMode:"screen"}}/>
-          {/* Eye highlights react to listening, thinking and speaking states. */}
-          <div
-            aria-hidden="true"
-            className={cn(
-              "pointer-events-none absolute left-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full transition-all duration-500",
-              state === "ouvindo" ? "opacity-100" : state === "processando" ? "opacity-75" : state === "respondendo" ? "opacity-90" : "opacity-35",
-            )}
-            style={{ background: "radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)", filter: "blur(1px)", animation: state === "ouvindo" ? "holo-eye-focus 1.1s ease-in-out infinite alternate" : state === "processando" ? "holo-eye-think 2s ease-in-out infinite" : "holo-eye-rest 4.5s ease-in-out infinite" }}
-          />
-          <div
-            aria-hidden="true"
-            className={cn(
-              "pointer-events-none absolute right-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full transition-all duration-500",
-              state === "ouvindo" ? "opacity-100" : state === "processando" ? "opacity-75" : state === "respondendo" ? "opacity-90" : "opacity-35",
-            )}
-            style={{ background: "radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)", filter: "blur(1px)", animation: state === "ouvindo" ? "holo-eye-focus 1.1s ease-in-out infinite alternate" : state === "processando" ? "holo-eye-think 2s ease-in-out infinite reverse" : "holo-eye-rest 4.5s ease-in-out infinite" }}
-          />
-          <div className="pointer-events-none absolute inset-0 scanlines opacity-80"/>
-          <div className="pointer-events-none absolute inset-0 opacity-45" style={{background:"repeating-linear-gradient(90deg, transparent 0 7px, rgba(196,181,253,.12) 7px 8px), linear-gradient(0deg, transparent 0 48%, rgba(221,214,254,.28) 50%, transparent 52%)"}}/>
-          <div className="pointer-events-none absolute inset-x-5 top-0 h-full" style={{background:"linear-gradient(180deg, transparent 0%, rgba(221,214,254,.20) 48%, transparent 52%, transparent 100%)",animation:"holo-scan 3.8s linear infinite"}}/>
-          <div className="pointer-events-none absolute inset-0" style={{boxShadow:"inset 0 0 42px rgba(124,58,237,.38)"}}/>
-          {/* Subtle mouth movement follows the real speech-synthesis playback state. */}
-          {state === "respondendo" && (
-            <span
-              aria-hidden="true"
-              className="pointer-events-none absolute left-1/2 top-[71.5%] -translate-x-1/2 rounded-[50%] border border-violet-200/80 bg-[#160d25]/90 shadow-[0_0_7px_rgba(196,181,253,.85)] transition-[width,height,opacity] duration-100"
-              style={{ width: `${13 + mouthLevel * 13}px`, height: `${2 + mouthLevel * 7}px`, opacity: 0.7 + mouthLevel * 0.3, transformOrigin: "center" }}
-            />
-          )}
-          {state === "respondendo" && <div className="pointer-events-none absolute inset-0 bg-violet-300/10" style={{animation:"holo-flicker .8s linear infinite"}}/>}
-        </div>
+
 
         </div>
 
