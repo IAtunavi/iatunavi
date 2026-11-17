@@ -14,8 +14,8 @@ export const ASSISTANT_STATES: { key: AssistantState; label: string; hint: strin
  * Live activity sources (chat, mic, voice, generation) take priority over the
  * manual demo state chosen in the state selector.
  */
-type Snapshot = { manual: AssistantState | null; sources: Record<string, AssistantState> };
-let snap: Snapshot = { manual: null, sources: {} };
+type Snapshot = { manual: AssistantState | null; sources: Record<string, AssistantState>; mouthLevel: number };
+let snap: Snapshot = { manual: null, sources: {}, mouthLevel: 0 };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -23,6 +23,13 @@ const PRIORITY: AssistantState[] = ["ouvindo", "respondendo", "processando", "ex
 
 export function setManualState(state: AssistantState | null) {
   snap = { ...snap, manual: state };
+  emit();
+}
+
+export function setVoiceMouthLevel(level: number) {
+  const mouthLevel = Math.max(0, Math.min(1, level));
+  if (Math.abs(snap.mouthLevel - mouthLevel) < 0.04) return;
+  snap = { ...snap, mouthLevel };
   emit();
 }
 
@@ -46,11 +53,11 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
-const serverSnap: Snapshot = { manual: null, sources: {} };
+const serverSnap: Snapshot = { manual: null, sources: {}, mouthLevel: 0 };
 
 export function useAssistantState() {
   const s = useSyncExternalStore(subscribe, () => snap, () => serverSnap);
-  return { state: resolveState(s), manual: s.manual, live: Object.keys(s.sources).length > 0 };
+  return { state: resolveState(s), manual: s.manual, live: Object.keys(s.sources).length > 0, mouthLevel: s.mouthLevel };
 }
 
 export const STATE_LABEL: Record<AssistantState, string> = {
