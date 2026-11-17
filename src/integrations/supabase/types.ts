@@ -49,12 +49,20 @@ export type Database = {
           active_model: string
           chat_enabled: boolean
           daily_message_limit: number
+          free_daily_limit: number
+          free_max_tokens: number
           id: number
           maintenance_message: string
           maintenance_mode: boolean
           max_output_tokens: number
           modules: Json
+          pro_daily_limit: number
+          pro_max_tokens: number
+          pro_modules: Json
+          pro_price_monthly: number
+          pro_price_yearly: number
           system_prompt: string
+          trial_days: number
           updated_at: string
           updated_by: string | null
         }
@@ -62,12 +70,20 @@ export type Database = {
           active_model?: string
           chat_enabled?: boolean
           daily_message_limit?: number
+          free_daily_limit?: number
+          free_max_tokens?: number
           id?: number
           maintenance_message?: string
           maintenance_mode?: boolean
           max_output_tokens?: number
           modules?: Json
+          pro_daily_limit?: number
+          pro_max_tokens?: number
+          pro_modules?: Json
+          pro_price_monthly?: number
+          pro_price_yearly?: number
           system_prompt?: string
+          trial_days?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -75,12 +91,20 @@ export type Database = {
           active_model?: string
           chat_enabled?: boolean
           daily_message_limit?: number
+          free_daily_limit?: number
+          free_max_tokens?: number
           id?: number
           maintenance_message?: string
           maintenance_mode?: boolean
           max_output_tokens?: number
           modules?: Json
+          pro_daily_limit?: number
+          pro_max_tokens?: number
+          pro_modules?: Json
+          pro_price_monthly?: number
+          pro_price_yearly?: number
           system_prompt?: string
+          trial_days?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -134,6 +158,48 @@ export type Database = {
         }
         Relationships: []
       }
+      subscriptions: {
+        Row: {
+          created_at: string
+          current_period_end: string | null
+          granted_by: string | null
+          mercadopago_payer_id: string | null
+          mercadopago_subscription_id: string | null
+          note: string | null
+          plan: string
+          provider: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          current_period_end?: string | null
+          granted_by?: string | null
+          mercadopago_payer_id?: string | null
+          mercadopago_subscription_id?: string | null
+          note?: string | null
+          plan?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          current_period_end?: string | null
+          granted_by?: string | null
+          mercadopago_payer_id?: string | null
+          mercadopago_subscription_id?: string | null
+          note?: string | null
+          plan?: string
+          provider?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -167,6 +233,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_pro: { Args: { _user_id: string }; Returns: boolean }
     }
     Enums: {
       app_role: "admin" | "user"
