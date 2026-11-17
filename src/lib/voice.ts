@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { setActivity, setVoiceMouthLevel } from "./assistant";
+import { setActivity, setFaceExpression, setVoiceMouthLevel, setVoiceViseme } from "./assistant";
 import { prefsStore } from "./data";
 
 type Recognition = {
@@ -98,6 +98,28 @@ export function getPreferredMaleVoice(): SpeechSynthesisVoice | undefined {
   return voices.find((voice) => /male|masculino|daniel|jorge|antonio|ricardo|felipe|lucas/i.test(voice.name)) ?? voices[0];
 }
 
+type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
+type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
+
+function visemeForWord(word: string): VoiceViseme {
+  const clean = word.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+  if (!clean) return "rest";
+  if (/^[bmp]/.test(clean) || /[bmp]$/.test(clean)) return "closed";
+  if (/^[fv]/.test(clean) || /[fv]/.test(clean)) return "teeth";
+  const vowel = clean.match(/[aeiou]/)?.[0];
+  if (vowel === "u" || vowel === "o") return "round";
+  if (vowel === "i" || vowel === "e") return "wide";
+  if (vowel === "a") return "open";
+  return "rest";
+}
+
+function expressionForText(text: string): FaceExpression {
+  if (/[?¿]/.test(text)) return "curious";
+  if (/\b(obrigad|excelente|ótim|perfeit|feliz|consegui|bem-vind)\w*/i.test(text) || /[!]/.test(text)) return "friendly";
+  if (/\b(atenção|cuidado|erro|risco|perigo|importante|problema)\w*/i.test(text)) return "serious";
+  return "neutral";
+}
+
 /** Read text aloud with the voice settings from the Voz module. */
 export function speak(text: string, overrides?: { rate?: number; pitch?: number; voiceName?: string }) {
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
@@ -114,20 +136,26 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
   u.onstart = () => {
     setActivity("voice", "respondendo");
     setVoiceMouthLevel(0.22);
+    setFaceExpression(expressionForText(clean));
   };
   u.onboundary = (event) => {
     if (event.name !== "word") return;
     const spokenWord = clean.slice(event.charIndex, event.charIndex + (event.charLength || 12));
-    const vowels = (spokenWord.match(/[aeiouáéíóúâêôãõ]/gi) ?? []).length;
-    const openness = Math.min(1, 0.18 + vowels * 0.17 + (/[áéíóúâêôãõ]/i.test(spokenWord) ? 0.12 : 0));
+    const viseme = visemeForWord(spokenWord);
+    const openness = viseme === "open" ? 0.92 : viseme === "wide" ? 0.48 : viseme === "round" ? 0.62 : viseme === "teeth" ? 0.28 : viseme === "closed" ? 0.08 : 0.2;
+    setVoiceViseme(viseme);
     setVoiceMouthLevel(openness);
   };
   u.onend = () => {
     setVoiceMouthLevel(0);
+    setVoiceViseme("rest");
+    setFaceExpression("neutral");
     setActivity("voice", null);
   };
   u.onerror = () => {
     setVoiceMouthLevel(0);
+    setVoiceViseme("rest");
+    setFaceExpression("neutral");
     setActivity("voice", null);
   };
   window.speechSynthesis.speak(u);
@@ -137,6 +165,8 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
 export function stopSpeaking() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
   setVoiceMouthLevel(0);
+  setVoiceViseme("rest");
+  setFaceExpression("neutral");
   setActivity("voice", null);
 }
 
