@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { setActivity } from "./assistant";
+import { setActivity, setVoiceMouthLevel } from "./assistant";
 import { prefsStore } from "./data";
 
 type Recognition = {
@@ -111,15 +111,32 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
   const name = overrides?.voiceName ?? prefs.voiceName;
   const voice = window.speechSynthesis.getVoices().find((v) => v.name === name) ?? getPreferredMaleVoice();
   if (voice) u.voice = voice;
-  u.onstart = () => setActivity("voice", "respondendo");
-  u.onend = () => setActivity("voice", null);
-  u.onerror = () => setActivity("voice", null);
+  u.onstart = () => {
+    setActivity("voice", "respondendo");
+    setVoiceMouthLevel(0.22);
+  };
+  u.onboundary = (event) => {
+    if (event.name !== "word") return;
+    const spokenWord = clean.slice(event.charIndex, event.charIndex + (event.charLength || 12));
+    const vowels = (spokenWord.match(/[aeiouáéíóúâêôãõ]/gi) ?? []).length;
+    const openness = Math.min(1, 0.18 + vowels * 0.17 + (/[áéíóúâêôãõ]/i.test(spokenWord) ? 0.12 : 0));
+    setVoiceMouthLevel(openness);
+  };
+  u.onend = () => {
+    setVoiceMouthLevel(0);
+    setActivity("voice", null);
+  };
+  u.onerror = () => {
+    setVoiceMouthLevel(0);
+    setActivity("voice", null);
+  };
   window.speechSynthesis.speak(u);
   return true;
 }
 
 export function stopSpeaking() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
+  setVoiceMouthLevel(0);
   setActivity("voice", null);
 }
 
