@@ -118,7 +118,7 @@ export function MediaCreator() {
       if (!output.url || !/^https:\/\//i.test(output.url)) throw new Error("A fal.ai concluiu o pedido, mas não retornou um arquivo válido.");
       setMediaUrl(output.url);
       saveHistory([{ id: uid(), type: mediaType, prompt: prompt.trim(), url: output.url, createdAt: Date.now() }, ...history]);
-      toast.success(mediaType === "image" ? "Imagem criada!" : "Vídeo criado!");
+      toast.success("Vídeo criado!");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Falha na criação.");
     } finally { setBusy(false); }
