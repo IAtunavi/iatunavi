@@ -77,16 +77,16 @@ export function MediaCreator() {
         return readApi<T>(response);
       };
       if (mediaType === "image") {
-        const output = await post<{ url?: string }>({
+        const output = await post<{ url?: string; provider?: string }>({
           action: "generate-image",
           prompt: prompt.trim(),
         });
         if (!output.url || !output.url.startsWith("data:image/")) {
-          throw new Error("A Cloudflare não retornou uma imagem válida.");
+          throw new Error("O provedor de imagens não retornou uma imagem válida.");
         }
         setMediaUrl(output.url);
         saveHistory([{ id: uid(), type: "image", prompt: prompt.trim(), url: output.url, createdAt: Date.now() }, ...history]);
-        toast.success("Imagem criada com sucesso pela Cloudflare!");
+        toast.success(output.provider === "openai" ? "Imagem criada pela OpenAI!" : "Imagem criada com sucesso!");
         return;
       }
 
@@ -134,9 +134,9 @@ export function MediaCreator() {
   return <div className="space-y-5">
     <GlassCard>
       <div className="flex flex-wrap gap-2">
-        {tabs.map((item) => { const Icon = item.icon; const unavailable = item.id !== "texto"; return <button key={item.id} type="button" disabled={unavailable} aria-disabled={unavailable} title={unavailable ? "Funcionalidade temporariamente em construção" : undefined} onClick={() => { if (!unavailable) { setTab(item.id); setMediaUrl(""); setTextResult(""); } }} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] ring-1 transition ${tab === item.id ? "bg-vio/25 text-lav ring-vio/50" : unavailable ? "cursor-not-allowed text-lav/30 ring-lav/10 opacity-60" : "text-lav/55 ring-lav/15 hover:bg-lav/5"}`}><Icon className="h-4 w-4"/>{item.id === "texto" ? item.label : `${item.label} · Em construção`}</button>; })}
+        {tabs.map((item) => { const Icon = item.icon; return <button key={item.id} type="button" onClick={() => { setTab(item.id); setMediaUrl(""); setTextResult(""); }} className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-[12px] ring-1 transition ${tab === item.id ? "bg-vio/25 text-lav ring-vio/50" : "text-lav/55 ring-lav/15 hover:bg-lav/5"}`}><Icon className="h-4 w-4"/>{item.label}</button>; })}
       </div>
-      <p className="mt-3 text-[11px] leading-5 text-lav/45">A criação de imagens e vídeos está temporariamente em construção. Estamos priorizando outras melhorias da TUNAVI; essas ferramentas serão ativadas em uma atualização futura. A criação de textos continua disponível.</p>
+      <p className="mt-3 text-[11px] leading-5 text-lav/45">Crie textos com IA, imagens pela OpenAI (ou Cloudflare como fallback) e vídeos pela fal.ai. As chaves dos provedores são processadas exclusivamente no servidor.</p>
       <div className="mt-5 grid gap-5 xl:grid-cols-[1.1fr_.9fr]">
         <div className="space-y-3">
           <CardTitle>{tab === "texto" ? "O que vamos escrever?" : tab === "imagem" ? "Descreva a imagem" : "Descreva o vídeo"}</CardTitle>
@@ -146,7 +146,7 @@ export function MediaCreator() {
             {tab === "video" && <label className="text-[11px] text-lav/55">Duração<select className={fieldClass + " mt-2"} value={duration} onChange={(event) => setDuration(event.target.value)}><option value="5">5 segundos</option><option value="10">10 segundos</option></select></label>}
           </div>}
           <button type="button" className={primaryButton} disabled={busy} onClick={() => void (tab === "texto" ? createText() : createMedia())}>{busy ? <RefreshCw className="h-4 w-4 animate-spin"/> : <WandSparkles className="h-4 w-4"/>}{busy ? " Criando..." : tab === "texto" ? " Criar texto" : tab === "imagem" ? " Gerar imagem" : " Gerar vídeo"}</button>
-          <p className="text-[10px] leading-5 text-lav/35">Imagens usam Cloudflare Workers AI e estão sujeitas à cota da conta. Vídeos continuam usando fal.ai e exigem créditos.</p>
+          <p className="text-[10px] leading-5 text-lav/35">Imagens usam OpenAI quando OPENAI_API_KEY está configurada; caso contrário, usam Cloudflare. Vídeos usam fal.ai e exigem FAL_KEY e créditos.</p>
         </div>
         <div className="min-h-64 rounded-2xl bg-ink/35 p-4 ring-1 ring-lav/10">
           <CardTitle aside={busy ? "processando" : mediaUrl || textResult ? "concluído" : "aguardando"}>Resultado</CardTitle>

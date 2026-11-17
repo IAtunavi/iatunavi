@@ -46,6 +46,29 @@ export const Route = createFileRoute("/api/media")({
         if ("error" in gate) return gate.error;
 
         if (body.action === "generate-image") {
+          const openAiKey = process.env["OPENAI_API_KEY"]?.trim();
+          if (openAiKey) {
+            try {
+              const response = await fetch("https://api.openai.com/v1/images/generations", {
+                method: "POST",
+                headers: { Authorization: `Bearer ${openAiKey}`, "Content-Type": "application/json" },
+                body: JSON.stringify({ model: "gpt-image-1", prompt: body.prompt, size: "1024x1024", quality: "medium" }),
+                signal: request.signal,
+              });
+              const data = await readJson<{ data?: Array<{ b64_json?: string; url?: string }>; error?: { message?: string } }>(response);
+              const image = data.data?.[0]?.b64_json;
+              if (!response.ok || !image) {
+                console.error("OpenAI image generation failed", response.status, data.error?.message);
+                return Response.json({ error: response.status === 429
+                  ? "Limite de geração de imagens da OpenAI atingido. Tente novamente mais tarde."
+                  : "A OpenAI não conseguiu gerar esta imagem. Verifique o acesso ao modelo e o faturamento da API." }, { status: response.status === 429 ? 429 : 502 });
+              }
+              return Response.json({ url: `data:image/png;base64,${image}`, mediaType: "image", provider: "openai" });
+            } catch (error) {
+              console.error("OpenAI image request failed", error);
+              return Response.json({ error: "Falha de comunicação com a OpenAI durante a geração da imagem." }, { status: 502 });
+            }
+          }
           const accountId = process.env["CLOUDFLARE_ACCOUNT_ID"]?.trim();
           const apiToken = process.env["CLOUDFLARE_API_TOKEN"]?.trim();
           if (!accountId || !apiToken) {
