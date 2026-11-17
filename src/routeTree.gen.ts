@@ -165,6 +165,7 @@ export interface FileRoutesByTo {
   '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/media': typeof ApiMediaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -186,6 +187,7 @@ export interface FileRoutesById {
   '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/media': typeof ApiMediaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -229,6 +231,7 @@ export interface FileRouteTypes {
     | '/voz'
     | '/api/chat'
     | '/api/generate'
+    | '/api/media'
   id:
     | '__root__'
     | '/'
@@ -249,6 +252,7 @@ export interface FileRouteTypes {
     | '/voz'
     | '/api/chat'
     | '/api/generate'
+    | '/api/media'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
