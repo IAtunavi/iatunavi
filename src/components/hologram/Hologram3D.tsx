@@ -9,6 +9,10 @@ type Props = { state: AssistantState; mouthLevel: number };
  */
 export function Hologram3D({ state, mouthLevel }: Props) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const stateRef = useRef(state);
+  const mouthRef = useRef(mouthLevel);
+  stateRef.current = state;
+  mouthRef.current = mouthLevel;
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -168,13 +172,14 @@ export function Hologram3D({ state, mouthLevel }: Props) {
           if (disposed) return;
           frame = requestAnimationFrame(animate);
           const t = clock.getElapsedTime();
-          const talking = state === "respondendo";
-          const thinking = state === "processando";
+          const currentState = stateRef.current;
+          const talking = currentState === "respondendo";
+          const thinking = currentState === "processando";
           head.rotation.y += ((pointerX + (thinking ? Math.sin(t * 0.7) * 0.08 : 0)) - head.rotation.y) * 0.055;
           head.rotation.x += ((-pointerY + Math.sin(t * 0.65) * 0.018) - head.rotation.x) * 0.05;
-          head.rotation.z = Math.sin(t * 0.55) * (state === "ouvindo" ? 0.025 : 0.012);
+          head.rotation.z = Math.sin(t * 0.55) * (currentState === "ouvindo" ? 0.025 : 0.012);
           hologram.position.y = Math.sin(t * 1.2) * 0.035;
-          const speakingOpen = talking ? 0.06 + Math.max(0, Math.min(1, mouthLevel)) * 0.72 : 0.025;
+          const speakingOpen = talking ? 0.06 + Math.max(0, Math.min(1, mouthRef.current)) * 0.72 : 0.025;
           mouth.scale.y += (speakingOpen - mouth.scale.y) * 0.32;
 
           const blinkCycle = t % 4.6;
@@ -182,7 +187,7 @@ export function Hologram3D({ state, mouthLevel }: Props) {
           const eyeScale = 1 - blink * 0.92;
           eyes.forEach((eye) => { eye.scale.y += (eyeScale - eye.scale.y) * 0.45; });
 
-          const glow = talking ? 1.5 : state === "ouvindo" ? 1.25 : 0.95;
+          const glow = talking ? 1.5 : currentState === "ouvindo" ? 1.25 : 0.95;
           skin.emissiveIntensity = glow;
           renderer.render(scene, camera);
         };
@@ -212,7 +217,7 @@ export function Hologram3D({ state, mouthLevel }: Props) {
       cleanup?.();
       renderer?.dispose?.();
     };
-  }, [state, mouthLevel]);
+  }, []);
 
   return <canvas ref={canvasRef} aria-hidden="true" className="pointer-events-auto absolute inset-0 h-full w-full" />;
 }
