@@ -78,16 +78,28 @@ export function useFacePresence() {
       const fileset = await vision.FilesetResolver.forVisionTasks(
         "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.22/wasm",
       );
-      const detector: FaceLandmarker = await vision.FaceLandmarker.createFromOptions(fileset, {
+      const detectorOptions = {
         baseOptions: {
           modelAssetPath: "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task",
-          delegate: "GPU",
         },
         runningMode: "VIDEO",
         numFaces: 1,
         outputFaceBlendshapes: false,
         outputFacialTransformationMatrixes: false,
-      });
+      };
+      let detector: FaceLandmarker;
+      try {
+        detector = await vision.FaceLandmarker.createFromOptions(fileset, {
+          ...detectorOptions,
+          baseOptions: { ...detectorOptions.baseOptions, delegate: "GPU" },
+        });
+      } catch {
+        // Some devices or browser drivers do not support WebGL inference.
+        detector = await vision.FaceLandmarker.createFromOptions(fileset, {
+          ...detectorOptions,
+          baseOptions: { ...detectorOptions.baseOptions, delegate: "CPU" },
+        });
+      }
       detectorRef.current = detector;
       runningRef.current = true;
       setState((current) => ({ ...current, active: true, error: null }));
