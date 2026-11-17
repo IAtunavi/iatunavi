@@ -128,11 +128,11 @@ export function Hologram({
         {/* The 3D avatar sits on a depth-aware stage for real-time parallax. */}
         <div
           data-holo-depth
-          className="relative"
+          className="absolute inset-0 h-full w-full"
           style={{ transformStyle: "preserve-3d", transition: "transform 180ms ease-out", willChange: "transform" }}
         >
         {/* Volumetric 3D face is layered over the original hologram as a visual fallback. */}
-        <div className="pointer-events-none absolute inset-0 z-10" style={{ transform: "translateZ(28px)" }}>
+        <div className="pointer-events-none absolute inset-0 z-10 h-full w-full" style={{ transform: "translateZ(28px)" }}>
           <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} gaze={faceTracking.faceDetected ? faceTracking.gaze : null} onStatus={setAvatarRuntime} />
         </div>
 
