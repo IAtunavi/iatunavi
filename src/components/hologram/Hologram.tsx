@@ -105,6 +105,23 @@ export function Hologram({
             }}
           />
           <div className="pointer-events-none absolute inset-0" style={{background:"linear-gradient(180deg, rgba(196,181,253,.10), rgba(124,58,237,.34)), radial-gradient(55% 48% at 50% 36%, rgba(221,214,254,.28), transparent 75%)",mixBlendMode:"screen"}}/>
+          {/* Eye highlights react to listening, thinking and speaking states. */}
+          <div
+            aria-hidden="true"
+            className={cn(
+              "pointer-events-none absolute left-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full transition-all duration-500",
+              state === "ouvindo" ? "opacity-100" : state === "processando" ? "opacity-75" : state === "respondendo" ? "opacity-90" : "opacity-35",
+            )}
+            style={{ background: "radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)", filter: "blur(1px)", animation: state === "ouvindo" ? "holo-eye-focus 1.1s ease-in-out infinite alternate" : state === "processando" ? "holo-eye-think 2s ease-in-out infinite" : "holo-eye-rest 4.5s ease-in-out infinite" }}
+          />
+          <div
+            aria-hidden="true"
+            className={cn(
+              "pointer-events-none absolute right-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full transition-all duration-500",
+              state === "ouvindo" ? "opacity-100" : state === "processando" ? "opacity-75" : state === "respondendo" ? "opacity-90" : "opacity-35",
+            )}
+            style={{ background: "radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)", filter: "blur(1px)", animation: state === "ouvindo" ? "holo-eye-focus 1.1s ease-in-out infinite alternate" : state === "processando" ? "holo-eye-think 2s ease-in-out infinite reverse" : "holo-eye-rest 4.5s ease-in-out infinite" }}
+          />
           <div className="pointer-events-none absolute inset-0 scanlines opacity-80"/>
           <div className="pointer-events-none absolute inset-0 opacity-45" style={{background:"repeating-linear-gradient(90deg, transparent 0 7px, rgba(196,181,253,.12) 7px 8px), linear-gradient(0deg, transparent 0 48%, rgba(221,214,254,.28) 50%, transparent 52%)"}}/>
           <div className="pointer-events-none absolute inset-x-5 top-0 h-full" style={{background:"linear-gradient(180deg, transparent 0%, rgba(221,214,254,.20) 48%, transparent 52%, transparent 100%)",animation:"holo-scan 3.8s linear infinite"}}/>
