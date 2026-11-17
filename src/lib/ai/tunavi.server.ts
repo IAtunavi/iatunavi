@@ -60,8 +60,11 @@ export async function gateAiRequest(request: Request, module: string, requirePro
 
   settings.daily_message_limit = proAccess ? settings.pro_daily_limit : settings.free_daily_limit;
   settings.max_output_tokens = Math.min(settings.max_output_tokens, proAccess ? settings.pro_max_tokens : settings.free_max_tokens);
-  const freeModel = typeof settings.modules["__ai_free_model"] === "string" ? settings.modules["__ai_free_model"] as string : "gpt-4o-mini";
-  const proModel = typeof settings.modules["__ai_pro_model"] === "string" ? settings.modules["__ai_pro_model"] as string : "gpt-4o";
+  const allowedOpenAiModels = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"];
+  const configuredFreeModel = settings.modules["__ai_free_model"];
+  const configuredProModel = settings.modules["__ai_pro_model"];
+  const freeModel = typeof configuredFreeModel === "string" && allowedOpenAiModels.includes(configuredFreeModel) ? configuredFreeModel : "gpt-4o-mini";
+  const proModel = typeof configuredProModel === "string" && allowedOpenAiModels.includes(configuredProModel) ? configuredProModel : "gpt-4o";
   const model = provider === "openai" ? (proAccess ? proModel : freeModel) : settings.active_model;
 
   const since = new Date();
