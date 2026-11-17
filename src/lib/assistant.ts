@@ -14,8 +14,10 @@ export const ASSISTANT_STATES: { key: AssistantState; label: string; hint: strin
  * Live activity sources (chat, mic, voice, generation) take priority over the
  * manual demo state chosen in the state selector.
  */
-type Snapshot = { manual: AssistantState | null; sources: Record<string, AssistantState>; mouthLevel: number };
-let snap: Snapshot = { manual: null, sources: {}, mouthLevel: 0 };
+type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
+type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
+type Snapshot = { manual: AssistantState | null; sources: Record<string, AssistantState>; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression };
+let snap: Snapshot = { manual: null, sources: {}, mouthLevel: 0, viseme: "rest", expression: "neutral" };
 const listeners = new Set<() => void>();
 const emit = () => listeners.forEach((l) => l());
 
@@ -33,7 +35,7 @@ export function setVoiceMouthLevel(level: number) {
   emit();
 }
 
-export function setActivity(source: string, state: AssistantState | null) {
+export function setVoiceViseme(viseme: VoiceViseme) {\n  if (snap.viseme === viseme) return;\n  snap = { ...snap, viseme };\n  emit();\n}\n\nexport function setFaceExpression(expression: FaceExpression) {\n  if (snap.expression === expression) return;\n  snap = { ...snap, expression };\n  emit();\n}\n\nexport function setActivity(source: string, state: AssistantState | null) {
   const sources = { ...snap.sources };
   if (state) sources[source] = state;
   else delete sources[source];
@@ -53,11 +55,11 @@ function subscribe(l: () => void) {
   return () => listeners.delete(l);
 }
 
-const serverSnap: Snapshot = { manual: null, sources: {}, mouthLevel: 0 };
+const serverSnap: Snapshot = { manual: null, sources: {}, mouthLevel: 0, viseme: "rest", expression: "neutral" };
 
 export function useAssistantState() {
   const s = useSyncExternalStore(subscribe, () => snap, () => serverSnap);
-  return { state: resolveState(s), manual: s.manual, live: Object.keys(s.sources).length > 0, mouthLevel: s.mouthLevel };
+  return { state: resolveState(s), manual: s.manual, live: Object.keys(s.sources).length > 0, mouthLevel: s.mouthLevel, viseme: s.viseme, expression: s.expression };
 }
 
 export const STATE_LABEL: Record<AssistantState, string> = {
