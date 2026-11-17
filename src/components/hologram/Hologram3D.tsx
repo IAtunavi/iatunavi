@@ -61,6 +61,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         scene.add(hologram);
         let vrm: any = null;
         let vrmHead: any = null;
+        const bodyBones: Record<string, { bone: any; rest: { x: number; y: number; z: number } }> = {};
         const lookTarget = new THREE.Object3D();
         lookTarget.position.set(0, 0.1, 4);
         scene.add(lookTarget);
@@ -104,11 +105,18 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
             const bounds = new THREE.Box3().setFromObject(vrm.scene);
             const size = bounds.getSize(new THREE.Vector3());
             const center = bounds.getCenter(new THREE.Vector3());
-            const scale = 4.1 / Math.max(size.y, 0.01);
+            // Frame the complete humanoid instead of a close-up bust.
+            const scale = 2.72 / Math.max(size.y, 0.01);
             vrm.scene.scale.setScalar(scale);
-            vrm.scene.position.set(-center.x * scale, -center.y * scale - 0.72, -center.z * scale);
+            vrm.scene.position.set(-center.x * scale, -center.y * scale + 0.02, -center.z * scale);
             scene.add(vrm.scene);
-            vrmHead = vrm.humanoid?.getNormalizedBoneNode?.("head") ?? null;
+            const humanoid = vrm.humanoid;
+            const boneNames = ["hips", "spine", "chest", "neck", "head", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand"];
+            for (const name of boneNames) {
+              const bone = humanoid?.getNormalizedBoneNode?.(name);
+              if (bone) bodyBones[name] = { bone, rest: { x: bone.rotation.x, y: bone.rotation.y, z: bone.rotation.z } };
+            }
+            vrmHead = bodyBones.head?.bone ?? null;
             if (vrm.lookAt) vrm.lookAt.target = lookTarget;
             hologram.visible = false;
             const fallback = canvas.closest("[data-holo-depth]")?.querySelector<HTMLElement>("[data-holo-fallback]") ?? null;
@@ -274,6 +282,29 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
           skin.emissiveIntensity = glow;
 
           if (vrm) {
+            // Smooth idle posture, listening nods and alternating speaking gestures.
+            const speakingGesture = talking ? Math.sin(t * 3.2) : 0;
+            const listeningNod = currentState === "ouvindo" ? Math.sin(t * 1.8) * 0.035 : 0;
+            const gestureTargets: Record<string, { x: number; y: number; z: number }> = {
+              hips: { x: 0, y: Math.sin(t * 0.45) * 0.018, z: 0 },
+              spine: { x: listeningNod - (talking ? 0.025 : 0), y: Math.sin(t * 0.8) * 0.018, z: 0 },
+              chest: { x: talking ? -0.035 : 0, y: Math.sin(t * 0.65) * 0.025, z: 0 },
+              neck: { x: listeningNod, y: pointerX * 0.12, z: 0 },
+              leftUpperArm: { x: talking ? -0.12 - Math.max(0, speakingGesture) * 0.12 : -0.025, y: 0, z: talking ? 0.12 + Math.max(0, speakingGesture) * 0.1 : 0.035 },
+              rightUpperArm: { x: talking ? -0.12 - Math.max(0, -speakingGesture) * 0.12 : -0.025, y: 0, z: talking ? -0.12 - Math.max(0, -speakingGesture) * 0.1 : -0.035 },
+              leftLowerArm: { x: talking ? -0.18 - Math.max(0, speakingGesture) * 0.22 : -0.04, y: 0, z: 0 },
+              rightLowerArm: { x: talking ? -0.18 - Math.max(0, -speakingGesture) * 0.22 : -0.04, y: 0, z: 0 },
+              leftHand: { x: 0, y: 0, z: talking ? 0.08 : 0 },
+              rightHand: { x: 0, y: 0, z: talking ? -0.08 : 0 },
+            };
+            for (const [name, target] of Object.entries(gestureTargets)) {
+              const entry = bodyBones[name];
+              if (!entry) continue;
+              const smooth = name.includes("Arm") || name.includes("Hand") ? 0.09 : 0.055;
+              entry.bone.rotation.x += (entry.rest.x + target.x - entry.bone.rotation.x) * smooth;
+              entry.bone.rotation.y += (entry.rest.y + target.y - entry.bone.rotation.y) * smooth;
+              entry.bone.rotation.z += (entry.rest.z + target.z - entry.bone.rotation.z) * smooth;
+            }
             lookTarget.position.set(pointerX * 3.2, 0.12 - pointerY * 2.2, 4);
             if (vrmHead) {
               vrmHead.rotation.y += (pointerX * 0.34 - vrmHead.rotation.y) * 0.08;
