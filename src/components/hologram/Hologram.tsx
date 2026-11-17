@@ -39,10 +39,22 @@ export function Hologram({
   return (
     <div
       className={cn("relative shrink-0", className)}
-      style={{ width: W * scale, height: H * scale }}
+      style={{ width: W * scale, height: H * scale, perspective: "1000px", touchAction: "pan-y" }}
       role="img"
-      aria-label={`Holograma da TUNAVI — ${STATE_LABEL[state]}`}
+      aria-label={`Holograma 3D da TUNAVI — ${STATE_LABEL[state]}. Mova o cursor para observar a perspectiva.`}
       data-state={state}
+      onPointerMove={(event) => {
+        if (event.pointerType === "touch") return;
+        const bounds = event.currentTarget.getBoundingClientRect();
+        const x = (event.clientX - bounds.left) / bounds.width - 0.5;
+        const y = (event.clientY - bounds.top) / bounds.height - 0.5;
+        const depth = event.currentTarget.querySelector<HTMLElement>("[data-holo-depth]");
+        if (depth) depth.style.transform = `rotateY(${x * 13}deg) rotateX(${-y * 9}deg) translateZ(8px)`;
+      }}
+      onPointerLeave={(event) => {
+        const depth = event.currentTarget.querySelector<HTMLElement>("[data-holo-depth]");
+        if (depth) depth.style.transform = "rotateY(0deg) rotateX(0deg) translateZ(0)";
+      }}
     >
       <div
         className="absolute left-0 top-0 flex justify-center"
@@ -86,6 +98,12 @@ export function Hologram({
           </div>
         )}
 
+        {/* The portrait sits on a depth-aware stage for real-time 3D parallax. */}
+        <div
+          data-holo-depth
+          className="relative"
+          style={{ transformStyle: "preserve-3d", transition: "transform 180ms ease-out", willChange: "transform" }}
+        >
         {/* Original realistic bust, projected as a violet hologram */}
         <div
           className="relative mt-0 h-[310px] w-[300px] overflow-hidden holo-mask"
@@ -112,6 +130,8 @@ export function Hologram({
               filter: "grayscale(1) sepia(.35) hue-rotate(220deg) saturate(3.2) contrast(1.28) brightness(1.08)",
               opacity: 0.9,
               mixBlendMode: "screen",
+              transform: "translateZ(18px) scale(1.04)",
+              backfaceVisibility: "hidden",
             }}
           />
           <div className="pointer-events-none absolute inset-0" style={{background:"linear-gradient(180deg, rgba(196,181,253,.10), rgba(124,58,237,.34)), radial-gradient(55% 48% at 50% 36%, rgba(221,214,254,.28), transparent 75%)",mixBlendMode:"screen"}}/>
@@ -145,6 +165,8 @@ export function Hologram({
             />
           )}
           {state === "respondendo" && <div className="pointer-events-none absolute inset-0 bg-violet-300/10" style={{animation:"holo-flicker .8s linear infinite"}}/>}
+        </div>
+
         </div>
 
         {/* Particles */}
