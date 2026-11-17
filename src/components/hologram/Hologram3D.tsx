@@ -41,7 +41,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
 
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 30);
-        camera.position.set(0, 0.05, 6.1);
+        camera.position.set(0, -0.95, 8.2);
+        camera.lookAt(0, -0.95, 0);
 
         renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
         renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -87,6 +88,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
         scene.add(faceLight);
 
         const hologram = new THREE.Group();
+        hologram.scale.setScalar(0.62);
+        hologram.position.y = -0.72;
         scene.add(hologram);
         let vrm: any = null;
         let vrmHead: any = null;
@@ -133,9 +136,9 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
             const size = bounds.getSize(new THREE.Vector3());
             const center = bounds.getCenter(new THREE.Vector3());
             // Frame the complete humanoid instead of a close-up bust.
-            const scale = 2.72 / Math.max(size.y, 0.01);
+            const scale = 3.15 / Math.max(size.y, 0.01);
             vrm.scene.scale.setScalar(scale);
-            vrm.scene.position.set(-center.x * scale, -center.y * scale + 0.02, -center.z * scale);
+            vrm.scene.position.set(-center.x * scale, -center.y * scale - 0.85, -center.z * scale);
             scene.add(vrm.scene);
             const humanoid = vrm.humanoid;
             const boneNames = ["hips", "spine", "chest", "neck", "head", "leftShoulder", "rightShoulder", "leftUpperArm", "rightUpperArm", "leftLowerArm", "rightLowerArm", "leftHand", "rightHand"];
@@ -187,11 +190,49 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
           return mesh;
         };
 
-        // Neck and shoulders create a recognisable masculine bust silhouette.
-        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.25, 0.32, 0.72, 32), skin);
+        // Full-body procedural fallback: head, torso, arms, hands, legs and shoes.
+        const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.25, 0.48, 32), skin);
         neck.position.set(0, -0.72, -0.02);
         hologram.add(neck);
-        addSphere(hologram, skin, [0, -1.13, -0.08], [0.94, 0.43, 0.43]);
+        const shirt = new THREE.MeshStandardMaterial({ color: 0x211a32, metalness: 0.12, roughness: 0.62 });
+        const shirtTrim = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, metalness: 0.42, roughness: 0.3, emissive: 0x321078, emissiveIntensity: 0.28 });
+        const trousers = new THREE.MeshStandardMaterial({ color: 0x171522, metalness: 0.08, roughness: 0.72 });
+        const shoes = new THREE.MeshStandardMaterial({ color: 0x0c0a12, metalness: 0.18, roughness: 0.5 });
+        addSphere(hologram, skin, [0, -1.13, -0.08], [0.88, 0.38, 0.4]);
+        addSphere(hologram, shirt, [0, -1.78, -0.04], [0.68, 0.82, 0.34]);
+        addSphere(hologram, shirt, [0, -2.35, -0.025], [0.48, 0.42, 0.3]);
+        addSphere(hologram, shirtTrim, [0, -1.26, 0.315], [0.42, 0.035, 0.025]);
+
+        const addLimb = (parent: any, material: any, from: [number, number, number], to: [number, number, number], radiusTop: number, radiusBottom: number) => {
+          const start = new THREE.Vector3(...from);
+          const finish = new THREE.Vector3(...to);
+          const direction = new THREE.Vector3().subVectors(finish, start);
+          const mesh = new THREE.Mesh(new THREE.CylinderGeometry(radiusTop, radiusBottom, direction.length(), 24), material);
+          mesh.position.copy(start).add(finish).multiplyScalar(0.5);
+          mesh.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction.normalize());
+          mesh.castShadow = true;
+          parent.add(mesh);
+          addSphere(parent, material, from, [radiusBottom, radiusBottom, radiusBottom]);
+          addSphere(parent, material, to, [radiusTop, radiusTop, radiusTop]);
+        };
+
+        for (const side of [-1, 1]) {
+          const shoulder: [number, number, number] = [side * 0.68, -1.28, 0];
+          const elbow: [number, number, number] = [side * 0.91, -2.0, 0.03];
+          const wrist: [number, number, number] = [side * 0.82, -2.68, 0.12];
+          addLimb(hologram, shirt, shoulder, elbow, 0.17, 0.23);
+          addLimb(hologram, skin, elbow, wrist, 0.105, 0.15);
+          addSphere(hologram, skin, [side * 0.82, -2.82, 0.14], [0.13, 0.19, 0.1]);
+        }
+
+        for (const side of [-1, 1]) {
+          const hip: [number, number, number] = [side * 0.27, -2.58, -0.015];
+          const knee: [number, number, number] = [side * 0.3, -3.48, 0.015];
+          const ankle: [number, number, number] = [side * 0.31, -4.35, 0.02];
+          addLimb(hologram, trousers, hip, knee, 0.19, 0.25);
+          addLimb(hologram, trousers, knee, ankle, 0.13, 0.18);
+          addSphere(hologram, shoes, [side * 0.31, -4.48, 0.18], [0.2, 0.12, 0.34]);
+        }
 
         // Skull, cheekbones and jaw are separate volumes for readable depth.
         addSphere(head, skin, [0, 0.02, 0], [0.72, 0.91, 0.62]);
