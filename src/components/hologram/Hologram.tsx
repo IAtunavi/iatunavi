@@ -107,7 +107,7 @@ export function Hologram({
         >
         {/* Volumetric 3D face is layered over the original hologram as a visual fallback. */}
         <div className="pointer-events-none absolute inset-0 z-10" style={{ transform: "translateZ(28px)" }}>
-          <Hologram3D state={state} mouthLevel={mouthLevel} />
+          <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} />
         </div>
         {/* Original realistic bust, projected as a violet hologram */}
         <div
