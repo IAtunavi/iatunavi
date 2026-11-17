@@ -41,6 +41,7 @@ export function Hologram({
   const headTransform = "translate3d(" + gazeX * 5 + "px," + gazeY * 3 + "px,0) rotateY(" + gazeX * 7 + "deg) rotateX(" + -gazeY * 4 + "deg)";
   const mouthWidth = viseme === "wide" ? 19 : viseme === "round" ? 9 : viseme === "closed" ? 10 : viseme === "teeth" ? 15 : 8 + mouthLevel * 13;
   const mouthHeight = viseme === "closed" ? 1 : viseme === "wide" ? 4 + mouthLevel * 3 : viseme === "round" ? 8 + mouthLevel * 3 : viseme === "teeth" ? 3 + mouthLevel * 3 : 1.5 + mouthLevel * 8;
+  const mouthOpen = viseme !== "rest" && mouthLevel > 0.015;
   const W = 360;
   const H = 440;
 
@@ -130,6 +131,7 @@ export function Hologram({
         )}
 
         {/* Original 2D portrait: projected as a violet hologram, no 3D canvas. */}
+          <style>{'@keyframes tunavi-face-blink{0%,91%,94%,100%{transform:scaleY(0);opacity:0}92.5%{transform:scaleY(1);opacity:.95}}@keyframes tunavi-mouth-light{0%,100%{filter:drop-shadow(0 0 2px rgba(196,181,253,.35))}50%{filter:drop-shadow(0 0 6px rgba(196,181,253,.9))}}@media(prefers-reduced-motion:reduce){.tunavi-eye-lid,.tunavi-mouth-layer{animation:none!important;transition:none!important}}'}</style>
         <div data-holo-depth className="relative mt-0 h-[410px] w-[300px] overflow-hidden holo-mask transition-opacity duration-700"
           style={{
             animation: state === "respondendo" ? "holo-pulse-glow 1.2s ease-in-out infinite, holo-head-speak 2.8s ease-in-out infinite"
@@ -143,13 +145,20 @@ export function Hologram({
             style={{filter:"grayscale(1) sepia(.35) hue-rotate(220deg) saturate(3.2) contrast(1.28) brightness(1.08)",opacity:.9,mixBlendMode:"screen",transform:"translate3d("+gazeX*4+"px,"+gazeY*2+"px,0) rotateY("+gazeX*5+"deg) rotateX("+(-gazeY*3)+"deg) scale(1.04)",transition:"transform 260ms ease-out",transformOrigin:"50% 48%",animation:state==="respondendo"?"holo-head-speak 2.8s ease-in-out infinite":"holo-head-rest 5s ease-in-out infinite"}} />
           <div className="pointer-events-none absolute inset-0" style={{background:"linear-gradient(180deg, rgba(196,181,253,.10), rgba(124,58,237,.34)), radial-gradient(55% 48% at 50% 36%, rgba(221,214,254,.28), transparent 75%)",mixBlendMode:"screen"}} />
           <div aria-hidden="true" className="pointer-events-none absolute left-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full" style={{background:"radial-gradient(ellipse, rgba(221,214,254,.98), rgba(167,139,250,.3) 55%, transparent 78%)",filter:"blur(1px)",opacity:state==="ouvindo"?1:.55,transform:"translate("+gazeX*3+"px,"+gazeY*2+"px)",animation:"holo-eye-rest 4.5s ease-in-out infinite"}} />
+          <span aria-hidden="true" className="tunavi-eye-lid pointer-events-none absolute left-[38.5%] top-[60.9%] h-[7px] w-[23%] rounded-[50%] bg-[#b9a0f4]/90" style={{transformOrigin:"center",animation:"tunavi-face-blink 5.4s ease-in-out 1.2s infinite",filter:"blur(1.2px)"}} />
           <div aria-hidden="true" className="pointer-events-none absolute right-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full" style={{background:"radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)",filter:"blur(1px)",opacity:state==="ouvindo"?1:.45,animation:state==="ouvindo"?"holo-eye-focus 1.1s ease-in-out infinite alternate":"holo-eye-rest 4.5s ease-in-out infinite"}} />
+          <span aria-hidden="true" className="tunavi-eye-lid pointer-events-none absolute right-[38.5%] top-[60.9%] h-[7px] w-[23%] rounded-[50%] bg-[#b9a0f4]/90" style={{transformOrigin:"center",animation:"tunavi-face-blink 5.4s ease-in-out 1.2s infinite",filter:"blur(1.2px)"}} />
           <div className="pointer-events-none absolute inset-0 scanlines opacity-80" />
           <div className="pointer-events-none absolute inset-0 opacity-45" style={{background:"repeating-linear-gradient(90deg, transparent 0 7px, rgba(196,181,253,.12) 7px 8px), linear-gradient(0deg, transparent 0 48%, rgba(221,214,254,.28) 50%, transparent 52%)"}} />
           <div className="pointer-events-none absolute inset-x-5 top-0 h-full" style={{background:"linear-gradient(180deg, transparent 0%, rgba(221,214,254,.20) 48%, transparent 52%, transparent 100%)",animation:"holo-scan 3.8s linear infinite"}} />
           <div className="pointer-events-none absolute inset-0" style={{boxShadow:"inset 0 0 42px rgba(124,58,237,.38)"}} />
-          {state === "respondendo" && <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[71.5%] -translate-x-1/2 rounded-[50%] border border-violet-200/80 bg-[#160d25]/90 shadow-[0_0_7px_rgba(196,181,253,.85)] transition-all duration-75"
-            style={{width:mouthWidth,height:mouthHeight,opacity:viseme==="rest"?.12:.55+mouthLevel*.45,transform:viseme==="wide"?"translateX(-50%) scaleX(1.3)":viseme==="round"?"translateX(-50%) scaleX(.8)":"translateX(-50%)",transition:"width 55ms linear,height 55ms linear,opacity 70ms linear"}} />}
+          {state === "respondendo" && (
+            <div className="tunavi-mouth-layer pointer-events-none absolute left-1/2 top-[71.1%] -translate-x-1/2" style={{width:mouthWidth+5,height:Math.max(3,mouthHeight+4),opacity:mouthOpen?Math.min(1,.48+mouthLevel*.55):.18,transform:"translateX(-50%) scaleX("+(viseme==="wide"?1.2:viseme==="round"?.82:1)+")",transition:"width 45ms linear,height 45ms linear,opacity 60ms linear",animation:mouthOpen?"tunavi-mouth-light 1.1s ease-in-out infinite":undefined}}>
+              <span aria-hidden="true" className="absolute inset-x-0 top-0 border border-violet-100/90 bg-[#100817] shadow-[0_0_8px_rgba(196,181,253,.8)]" style={{height:"100%",borderRadius:viseme==="round"?"50%":"45% 45% 55% 55%",background:"radial-gradient(ellipse at center,#100817 25%,#32164f 78%,#b9a0f4 100%)"}} />
+              {(viseme==="teeth"||viseme==="wide")&&<span aria-hidden="true" className="absolute left-[22%] right-[22%] top-[12%] h-[22%] rounded-b-sm bg-violet-100/90 shadow-[0_0_3px_rgba(221,214,254,.8)]" />}
+              <span aria-hidden="true" className="absolute bottom-[8%] left-[24%] right-[24%] h-[1px] rounded-full bg-violet-200/75" />
+            </div>
+          )}
           <div aria-hidden="true" className="pointer-events-none absolute left-[38%] top-[59.5%] h-[2px] w-[12%] rounded-full bg-violet-100/70" style={{transform:live.expression==="curious"?"rotate(-9deg)":live.expression==="serious"?"rotate(7deg)":"rotate(0deg)",opacity:live.expression==="neutral"?.15:.75,filter:"blur(.5px)"}} />
           <div aria-hidden="true" className="pointer-events-none absolute right-[38%] top-[59.5%] h-[2px] w-[12%] rounded-full bg-violet-100/70" style={{transform:live.expression==="curious"?"rotate(9deg)":live.expression==="serious"?"rotate(-7deg)":"rotate(0deg)",opacity:live.expression==="neutral"?.15:.75,filter:"blur(.5px)"}} />
           <div className="pointer-events-none absolute inset-0" style={{background:state==="respondendo"?"rgba(196,181,253,.06)":"transparent",animation:state==="respondendo"?"holo-flicker .8s linear infinite":undefined}} />
