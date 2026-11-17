@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Hologram3D } from "./Hologram3D";
 import bust from "@/assets/tunavi-bust.jpg";
 import { STATE_LABEL, useAssistantState, type AssistantState } from "@/lib/assistant";
 
@@ -104,6 +105,10 @@ export function Hologram({
           className="relative"
           style={{ transformStyle: "preserve-3d", transition: "transform 180ms ease-out", willChange: "transform" }}
         >
+        {/* Volumetric 3D face is layered over the original hologram as a visual fallback. */}
+        <div className="pointer-events-none absolute inset-0 z-10" style={{ transform: "translateZ(28px)" }}>
+          <Hologram3D state={state} mouthLevel={mouthLevel} />
+        </div>
         {/* Original realistic bust, projected as a violet hologram */}
         <div
           className="relative mt-0 h-[310px] w-[300px] overflow-hidden holo-mask"
