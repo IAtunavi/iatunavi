@@ -35,7 +35,19 @@ export function setVoiceMouthLevel(level: number) {
   emit();
 }
 
-export function setVoiceViseme(viseme: VoiceViseme) {\n  if (snap.viseme === viseme) return;\n  snap = { ...snap, viseme };\n  emit();\n}\n\nexport function setFaceExpression(expression: FaceExpression) {\n  if (snap.expression === expression) return;\n  snap = { ...snap, expression };\n  emit();\n}\n\nexport function setActivity(source: string, state: AssistantState | null) {
+export function setVoiceViseme(viseme: VoiceViseme) {
+  if (snap.viseme === viseme) return;
+  snap = { ...snap, viseme };
+  emit();
+}
+
+export function setFaceExpression(expression: FaceExpression) {
+  if (snap.expression === expression) return;
+  snap = { ...snap, expression };
+  emit();
+}
+
+export function setActivity(source: string, state: AssistantState | null) {
   const sources = { ...snap.sources };
   if (state) sources[source] = state;
   else delete sources[source];
