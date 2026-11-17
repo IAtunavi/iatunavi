@@ -1,5 +1,5 @@
 import { createOpenAI } from "@ai-sdk/openai";
-import { streamText, tool, stepCountIs, type ModelMessage } from "ai";
+import { streamText, tool, stepCountIs, type ModelMessage, type ToolSet } from "ai";
 import { z } from "zod";
 
 import {
@@ -46,7 +46,7 @@ export function createResponsesCall(
     model: provider.responses(config.model),
     ...(instructions ? { instructions } : {}),
     messages,
-    tools: tunaviTools,
+    tools: tunaviTools as unknown as ToolSet,
     stopWhen: stepCountIs(6),
     abortSignal: request.signal,
     ...(config.maxOutputTokens ? { maxOutputTokens: config.maxOutputTokens } : {}),
