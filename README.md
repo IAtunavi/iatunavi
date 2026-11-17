@@ -65,3 +65,10 @@ O modelo padrão é um avatar estilizado, não um humano fotorealista. Para uma 
 ## Linguagem corporal do avatar
 
 O palco 3D foi ampliado para enquadrar o corpo inteiro do modelo VRM. Quando o arquivo contém os ossos humanoides esperados, o avatar anima postura, tronco, cabeça, braços e mãos com movimentos suaves: pequenos acenos enquanto escuta e gestos alternados durante a fala. Modelos sem algum osso continuam funcionando; os movimentos ausentes são simplesmente ignorados. Os gestos são procedurais e não representam captura de movimento.
+
+
+## Acompanhamento visual opcional
+
+O componente do holograma oferece um controle **Ativar olhar**. A câmera só é solicitada depois do clique explícito do usuário; o recurso usa `getUserMedia` e MediaPipe Face Landmarker no próprio navegador para estimar a posição do rosto e orientar o olhar/cabeça do avatar. Nenhum quadro de câmera é enviado ao servidor, gravado ou usado para identificar a pessoa. O botão **Desativar olhar** encerra a detecção e libera as faixas da câmera.
+
+O recurso requer contexto seguro (HTTPS ou localhost), navegador compatível, câmera disponível e permissão concedida. O runtime de visão e o modelo são carregados sob demanda por CDN; se não estiverem disponíveis, o holograma e o controle de voz continuam funcionando. A detecção indica apenas presença/posição aproximada do rosto: não é reconhecimento de identidade, leitura de emoções nem autenticação.
