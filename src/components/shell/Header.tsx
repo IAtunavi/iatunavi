@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Bell, Crown, LogIn, LogOut, Menu, Settings2, Volume2, VolumeX } from "lucide-react";
+import { Bell, Crown, LogIn, LogOut, Menu, Settings2, Sparkles, Volume2, VolumeX } from "lucide-react";
 import avatar from "@/assets/user-avatar.jpg";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import {
@@ -142,6 +142,9 @@ export function Header({ onOpenNav }: { onOpenNav: () => void }) {
                 <Crown className="h-4 w-4 text-vio" /> Super Painel
               </DropdownMenuItem>
             )}
+            <DropdownMenuItem onSelect={() => navigate({ to: "/planos" })} className="text-lav">
+              <Sparkles className="h-4 w-4 text-vio" /> Planos e TUNAVI Pro
+            </DropdownMenuItem>
             <DropdownMenuItem onSelect={() => navigate({ to: "/configuracoes" })}>
               <Settings2 className="h-4 w-4" /> Configurações
             </DropdownMenuItem>

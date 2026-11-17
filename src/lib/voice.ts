@@ -133,7 +133,7 @@ function animateWordVisemes(word: string, rate: number) {
     return;
   }
   const stepMs = Math.max(42, Math.min(105, 76 / Math.max(rate, 0.5)));
-  applyViseme(sequence[0]);
+  applyViseme(sequence[0] ?? "rest");
   sequence.slice(1).forEach((viseme, index) => {
     const timer = window.setTimeout(() => applyViseme(viseme), Math.round((index + 1) * stepMs));
     visemeTimers.push(timer);

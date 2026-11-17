@@ -20,6 +20,7 @@ import { Route as IntegracoesRouteImport } from './routes/integracoes'
 import { Route as MemoriaRouteImport } from './routes/memoria'
 import { Route as MeuEspacoRouteImport } from './routes/meu-espaco'
 import { Route as PesquisaRouteImport } from './routes/pesquisa'
+import { Route as PlanosRouteImport } from './routes/planos'
 import { Route as ProjetosRouteImport } from './routes/projetos'
 import { Route as SegurancaRouteImport } from './routes/seguranca'
 import { Route as SuperPainelRouteImport } from './routes/super-painel'
@@ -84,6 +85,11 @@ const PesquisaRoute = PesquisaRouteImport.update({
   path: '/pesquisa',
   getParentRoute: () => rootRouteImport,
 } as any)
+const PlanosRoute = PlanosRouteImport.update({
+  id: '/planos',
+  path: '/planos',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ProjetosRoute = ProjetosRouteImport.update({
   id: '/projetos',
   path: '/projetos',
@@ -137,6 +143,7 @@ export interface FileRoutesByFullPath {
   '/memoria': typeof MemoriaRoute
   '/meu-espaco': typeof MeuEspacoRoute
   '/pesquisa': typeof PesquisaRoute
+  '/planos': typeof PlanosRoute
   '/projetos': typeof ProjetosRoute
   '/seguranca': typeof SegurancaRoute
   '/super-painel': typeof SuperPainelRoute
@@ -158,6 +165,7 @@ export interface FileRoutesByTo {
   '/memoria': typeof MemoriaRoute
   '/meu-espaco': typeof MeuEspacoRoute
   '/pesquisa': typeof PesquisaRoute
+  '/planos': typeof PlanosRoute
   '/projetos': typeof ProjetosRoute
   '/seguranca': typeof SegurancaRoute
   '/super-painel': typeof SuperPainelRoute
@@ -165,6 +173,7 @@ export interface FileRoutesByTo {
   '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/media': typeof ApiMediaRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -179,6 +188,7 @@ export interface FileRoutesById {
   '/memoria': typeof MemoriaRoute
   '/meu-espaco': typeof MeuEspacoRoute
   '/pesquisa': typeof PesquisaRoute
+  '/planos': typeof PlanosRoute
   '/projetos': typeof ProjetosRoute
   '/seguranca': typeof SegurancaRoute
   '/super-painel': typeof SuperPainelRoute
@@ -186,6 +196,7 @@ export interface FileRoutesById {
   '/voz': typeof VozRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate': typeof ApiGenerateRoute
+  '/api/media': typeof ApiMediaRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/memoria'
     | '/meu-espaco'
     | '/pesquisa'
+    | '/planos'
     | '/projetos'
     | '/seguranca'
     | '/super-painel'
@@ -222,6 +234,7 @@ export interface FileRouteTypes {
     | '/memoria'
     | '/meu-espaco'
     | '/pesquisa'
+    | '/planos'
     | '/projetos'
     | '/seguranca'
     | '/super-painel'
@@ -229,6 +242,7 @@ export interface FileRouteTypes {
     | '/voz'
     | '/api/chat'
     | '/api/generate'
+    | '/api/media'
   id:
     | '__root__'
     | '/'
@@ -242,6 +256,7 @@ export interface FileRouteTypes {
     | '/memoria'
     | '/meu-espaco'
     | '/pesquisa'
+    | '/planos'
     | '/projetos'
     | '/seguranca'
     | '/super-painel'
@@ -249,6 +264,7 @@ export interface FileRouteTypes {
     | '/voz'
     | '/api/chat'
     | '/api/generate'
+    | '/api/media'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -263,6 +279,7 @@ export interface RootRouteChildren {
   MemoriaRoute: typeof MemoriaRoute
   MeuEspacoRoute: typeof MeuEspacoRoute
   PesquisaRoute: typeof PesquisaRoute
+  PlanosRoute: typeof PlanosRoute
   ProjetosRoute: typeof ProjetosRoute
   SegurancaRoute: typeof SegurancaRoute
   SuperPainelRoute: typeof SuperPainelRoute
@@ -352,6 +369,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PesquisaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/planos': {
+      id: '/planos'
+      path: '/planos'
+      fullPath: '/planos'
+      preLoaderRoute: typeof PlanosRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/projetos': {
       id: '/projetos'
       path: '/projetos'
@@ -423,6 +447,7 @@ const rootRouteChildren: RootRouteChildren = {
   MemoriaRoute: MemoriaRoute,
   MeuEspacoRoute: MeuEspacoRoute,
   PesquisaRoute: PesquisaRoute,
+  PlanosRoute: PlanosRoute,
   ProjetosRoute: ProjetosRoute,
   SegurancaRoute: SegurancaRoute,
   SuperPainelRoute: SuperPainelRoute,
