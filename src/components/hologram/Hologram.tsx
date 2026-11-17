@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Hologram3D } from "./Hologram3D";
 import { useFacePresence } from "@/hooks/useFacePresence";
+import bust from "@/assets/tunavi-bust.jpg";
 import { STATE_LABEL, useAssistantState, type AssistantState } from "@/lib/assistant";
 
 const PARTICLES = [
@@ -32,7 +32,6 @@ export function Hologram({
   className?: string;
   forceState?: AssistantState;
 }) {
-  const [avatarRuntime, setAvatarRuntime] = useState<"loading" | "loaded" | "fallback" | "unavailable">("loading");
   const live = useAssistantState();
   const faceTracking = useFacePresence();
   const state = forceState ?? live.state;
@@ -45,7 +44,7 @@ export function Hologram({
       className={cn("relative shrink-0", className)}
       style={{ width: W * scale, height: H * scale, perspective: "1000px", touchAction: "pan-y" }}
       role="group"
-      aria-label={`Holograma 3D da TUNAVI — ${STATE_LABEL[state]}. Mova o cursor ou ative o acompanhamento visual para observar a perspectiva.`}
+      aria-label={`Avatar holográfico 2D da TUNAVI — ${STATE_LABEL[state]}.`}
       data-state={state}
       onPointerMove={(event) => {
         if (event.pointerType === "touch") return;
@@ -125,18 +124,30 @@ export function Hologram({
           </div>
         )}
 
-        {/* The 3D avatar sits on a depth-aware stage for real-time parallax. */}
-        <div
-          data-holo-depth
-          className="absolute inset-0 h-full w-full"
-          style={{ transformStyle: "preserve-3d", transition: "transform 180ms ease-out", willChange: "transform" }}
-        >
-        {/* Volumetric 3D face is layered over the original hologram as a visual fallback. */}
-        <div className="pointer-events-none absolute inset-0 z-10 h-full w-full" style={{ transform: "translateZ(28px)" }}>
-          <Hologram3D state={state} mouthLevel={mouthLevel} viseme={live.viseme} expression={live.expression} gaze={faceTracking.faceDetected ? faceTracking.gaze : null} onStatus={setAvatarRuntime} />
-        </div>
-
-
+        {/* Original 2D portrait: projected as a violet hologram, no 3D canvas. */}
+        <div data-holo-depth className="relative mt-0 h-[410px] w-[300px] overflow-hidden holo-mask transition-opacity duration-700"
+          style={{
+            animation: state === "respondendo" ? "holo-pulse-glow 1.2s ease-in-out infinite, holo-head-speak 2.8s ease-in-out infinite"
+              : state === "ouvindo" ? "holo-head-listen 3.2s ease-in-out infinite"
+              : state === "processando" ? "holo-head-think 2.6s ease-in-out infinite"
+              : state === "executando" ? "holo-head-execute 2.2s ease-in-out infinite" : "holo-head-rest 5s ease-in-out infinite",
+            filter: "drop-shadow(0 0 22px color-mix(in oklab, var(--vio) 55%, transparent))",
+            transformStyle: "preserve-3d", transition: "transform 180ms ease-out", willChange: "transform",
+          }}>
+          <img src={bust} alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-contain object-bottom"
+            style={{filter:"grayscale(1) sepia(.35) hue-rotate(220deg) saturate(3.2) contrast(1.28) brightness(1.08)",opacity:.9,mixBlendMode:"screen",transform:"scale(1.04)"}} />
+          <div className="pointer-events-none absolute inset-0" style={{background:"linear-gradient(180deg, rgba(196,181,253,.10), rgba(124,58,237,.34)), radial-gradient(55% 48% at 50% 36%, rgba(221,214,254,.28), transparent 75%)",mixBlendMode:"screen"}} />
+          <div aria-hidden="true" className="pointer-events-none absolute left-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full" style={{background:"radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)",filter:"blur(1px)",opacity:state==="ouvindo"?1:.45,animation:state==="ouvindo"?"holo-eye-focus 1.1s ease-in-out infinite alternate":"holo-eye-rest 4.5s ease-in-out infinite"}} />
+          <div aria-hidden="true" className="pointer-events-none absolute right-[39%] top-[61.5%] h-[5px] w-[22%] rounded-full" style={{background:"radial-gradient(ellipse, rgba(221,214,254,.95), rgba(167,139,250,.28) 55%, transparent 78%)",filter:"blur(1px)",opacity:state==="ouvindo"?1:.45,animation:state==="ouvindo"?"holo-eye-focus 1.1s ease-in-out infinite alternate":"holo-eye-rest 4.5s ease-in-out infinite"}} />
+          <div className="pointer-events-none absolute inset-0 scanlines opacity-80" />
+          <div className="pointer-events-none absolute inset-0 opacity-45" style={{background:"repeating-linear-gradient(90deg, transparent 0 7px, rgba(196,181,253,.12) 7px 8px), linear-gradient(0deg, transparent 0 48%, rgba(221,214,254,.28) 50%, transparent 52%)"}} />
+          <div className="pointer-events-none absolute inset-x-5 top-0 h-full" style={{background:"linear-gradient(180deg, transparent 0%, rgba(221,214,254,.20) 48%, transparent 52%, transparent 100%)",animation:"holo-scan 3.8s linear infinite"}} />
+          <div className="pointer-events-none absolute inset-0" style={{boxShadow:"inset 0 0 42px rgba(124,58,237,.38)"}} />
+          {state === "respondendo" && <span aria-hidden="true" className="pointer-events-none absolute left-1/2 top-[71.5%] -translate-x-1/2 rounded-[50%] border border-violet-200/80 bg-[#160d25]/90 shadow-[0_0_7px_rgba(196,181,253,.85)] transition-all duration-75"
+            style={{width:live.viseme==="wide"?19:live.viseme==="round"?9:live.viseme==="closed"?12:13+mouthLevel*13,height:live.viseme==="closed"?1:live.viseme==="wide"?4:live.viseme==="round"?9:2+mouthLevel*7,opacity:live.viseme==="rest"?.25:.7+mouthLevel*.3,transform:live.viseme==="wide"?"translateX(-50%) scaleX(1.25)":"translateX(-50%)"}} />}
+          <div aria-hidden="true" className="pointer-events-none absolute left-[38%] top-[59.5%] h-[2px] w-[12%] rounded-full bg-violet-100/70" style={{transform:live.expression==="curious"?"rotate(-9deg)":live.expression==="serious"?"rotate(7deg)":"rotate(0deg)",opacity:live.expression==="neutral"?.15:.75,filter:"blur(.5px)"}} />
+          <div aria-hidden="true" className="pointer-events-none absolute right-[38%] top-[59.5%] h-[2px] w-[12%] rounded-full bg-violet-100/70" style={{transform:live.expression==="curious"?"rotate(9deg)":live.expression==="serious"?"rotate(-7deg)":"rotate(0deg)",opacity:live.expression==="neutral"?.15:.75,filter:"blur(.5px)"}} />
+          <div className="pointer-events-none absolute inset-0" style={{background:state==="respondendo"?"rgba(196,181,253,.06)":"transparent",animation:state==="respondendo"?"holo-flicker .8s linear infinite":undefined}} />
         </div>
 
         {/* Particles */}
@@ -207,10 +218,6 @@ export function Hologram({
             </div>
           </div>
         )}
-
-        <div role="status" aria-live="polite" className="absolute right-5 bottom-10 z-20 rounded-full border border-lav/20 bg-[#10091f]/80 px-2.5 py-1 font-mono text-[9px] uppercase tracking-wider text-violet-200/80 backdrop-blur" title="Estado de carregamento do avatar 3D">
-          {avatarRuntime === "loading" ? "Carregando avatar 3D…" : avatarRuntime === "loaded" ? "Avatar VRM ativo" : avatarRuntime === "fallback" ? "Modo holograma reserva" : "3D indisponível · modo reserva"}
-        </div>
 
         {/* Status pill */}
         <div className="absolute -bottom-1 flex h-8 items-center gap-2 rounded-full px-4 font-mono text-[11px] uppercase tracking-[0.2em] text-lav/80 ring-1 ring-lav/15 glass">
