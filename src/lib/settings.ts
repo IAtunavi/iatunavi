@@ -13,6 +13,14 @@ export type AppSettings = {
   maintenance_message: string;
   modules: Partial<Record<ModuleKey, boolean>>;
   updated_at: string;
+  pro_price_monthly: number;
+  pro_price_yearly: number;
+  free_daily_limit: number;
+  pro_daily_limit: number;
+  free_max_tokens: number;
+  pro_max_tokens: number;
+  trial_days: number;
+  pro_modules: ModuleKey[];
 };
 
 export const AI_MODELS: { id: string; label: string; note: string }[] = [
@@ -30,7 +38,7 @@ export function useAppSettings() {
     queryFn: async (): Promise<AppSettings> => {
       const { data, error } = await supabase.from("app_settings").select("*").eq("id", 1).single();
       if (error) throw error;
-      return { ...data, modules: (data.modules ?? {}) as AppSettings["modules"] };
+      return { ...data, modules: (data.modules ?? {}) as AppSettings["modules"], pro_modules: (Array.isArray(data.pro_modules) ? data.pro_modules : []) as ModuleKey[] };
     },
     staleTime: 30_000,
   });
