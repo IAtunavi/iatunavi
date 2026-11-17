@@ -109,6 +109,14 @@ export function Hologram({
           <div className="pointer-events-none absolute inset-0 opacity-45" style={{background:"repeating-linear-gradient(90deg, transparent 0 7px, rgba(196,181,253,.12) 7px 8px), linear-gradient(0deg, transparent 0 48%, rgba(221,214,254,.28) 50%, transparent 52%)"}}/>
           <div className="pointer-events-none absolute inset-x-5 top-0 h-full" style={{background:"linear-gradient(180deg, transparent 0%, rgba(221,214,254,.20) 48%, transparent 52%, transparent 100%)",animation:"holo-scan 3.8s linear infinite"}}/>
           <div className="pointer-events-none absolute inset-0" style={{boxShadow:"inset 0 0 42px rgba(124,58,237,.38)"}}/>
+          {/* Subtle mouth movement follows the real speech-synthesis playback state. */}
+          {state === "respondendo" && (
+            <span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-[71.5%] h-[5px] w-[19px] -translate-x-1/2 rounded-[50%] border border-violet-200/70 bg-[#160d25]/90 shadow-[0_0_7px_rgba(196,181,253,.85)]"
+              style={{ animation: "holo-mouth 180ms ease-in-out infinite alternate", transformOrigin: "center" }}
+            />
+          )}
           {state === "respondendo" && <div className="pointer-events-none absolute inset-0 bg-violet-300/10" style={{animation:"holo-flicker .8s linear infinite"}}/>}
         </div>
 
