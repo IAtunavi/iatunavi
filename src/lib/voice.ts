@@ -101,16 +101,43 @@ export function getPreferredMaleVoice(): SpeechSynthesisVoice | undefined {
 type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
 type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
 
-function visemeForWord(word: string): VoiceViseme {
-  const clean = word.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+function visemeForCharacter(character: string): VoiceViseme {
+  const clean = character.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
   if (!clean) return "rest";
-  if (/^[bmp]/.test(clean) || /[bmp]$/.test(clean)) return "closed";
-  if (/^[fv]/.test(clean) || /[fv]/.test(clean)) return "teeth";
-  const vowel = clean.match(/[aeiou]/)?.[0];
-  if (vowel === "u" || vowel === "o") return "round";
-  if (vowel === "i" || vowel === "e") return "wide";
-  if (vowel === "a") return "open";
+  if (/[bmp]/.test(clean)) return "closed";
+  if (/[fv]/.test(clean)) return "teeth";
+  if (/[ou]/.test(clean)) return "round";
+  if (/[ie]/.test(clean)) return "wide";
+  if (/a/.test(clean)) return "open";
   return "rest";
+}
+
+let visemeTimers: number[] = [];
+
+function clearVisemeTimers() {
+  visemeTimers.forEach((timer) => window.clearTimeout(timer));
+  visemeTimers = [];
+}
+
+function applyViseme(viseme: VoiceViseme) {
+  const openness = viseme === "open" ? 0.92 : viseme === "wide" ? 0.48 : viseme === "round" ? 0.62 : viseme === "teeth" ? 0.28 : viseme === "closed" ? 0.04 : 0.16;
+  setVoiceViseme(viseme);
+  setVoiceMouthLevel(openness);
+}
+
+function animateWordVisemes(word: string, rate: number) {
+  clearVisemeTimers();
+  const sequence = Array.from(word).slice(0, 18).map(visemeForCharacter);
+  if (!sequence.length) {
+    applyViseme("rest");
+    return;
+  }
+  const stepMs = Math.max(42, Math.min(105, 76 / Math.max(rate, 0.5)));
+  applyViseme(sequence[0]);
+  sequence.slice(1).forEach((viseme, index) => {
+    const timer = window.setTimeout(() => applyViseme(viseme), Math.round((index + 1) * stepMs));
+    visemeTimers.push(timer);
+  });
 }
 
 function expressionForText(text: string): FaceExpression {
@@ -125,6 +152,7 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
   if (typeof window === "undefined" || !("speechSynthesis" in window)) return false;
   const clean = text.replace(/```[\s\S]*?```/g, " código omitido ").replace(/[#*_`>|-]/g, " ").slice(0, 1200);
   const prefs = prefsStore.get();
+  clearVisemeTimers();
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(clean);
   u.lang = "pt-BR";
@@ -135,24 +163,23 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
   if (voice) u.voice = voice;
   u.onstart = () => {
     setActivity("voice", "respondendo");
-    setVoiceMouthLevel(0.22);
+    applyViseme("open");
     setFaceExpression(expressionForText(clean));
   };
   u.onboundary = (event) => {
     if (event.name !== "word") return;
     const spokenWord = clean.slice(event.charIndex, event.charIndex + (event.charLength || 12));
-    const viseme = visemeForWord(spokenWord);
-    const openness = viseme === "open" ? 0.92 : viseme === "wide" ? 0.48 : viseme === "round" ? 0.62 : viseme === "teeth" ? 0.28 : viseme === "closed" ? 0.08 : 0.2;
-    setVoiceViseme(viseme);
-    setVoiceMouthLevel(openness);
+    animateWordVisemes(spokenWord, u.rate);
   };
   u.onend = () => {
+    clearVisemeTimers();
     setVoiceMouthLevel(0);
     setVoiceViseme("rest");
     setFaceExpression("neutral");
     setActivity("voice", null);
   };
   u.onerror = () => {
+    clearVisemeTimers();
     setVoiceMouthLevel(0);
     setVoiceViseme("rest");
     setFaceExpression("neutral");
@@ -163,6 +190,7 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
 }
 
 export function stopSpeaking() {
+  clearVisemeTimers();
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
   setVoiceMouthLevel(0);
   setVoiceViseme("rest");
