@@ -102,7 +102,7 @@ type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
 type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
 
 function visemeForWord(word: string): VoiceViseme {
-  const clean = word.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+  const clean = word.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   if (!clean) return "rest";
   if (/^[bmp]/.test(clean) || /[bmp]$/.test(clean)) return "closed";
   if (/^[fv]/.test(clean) || /[fv]/.test(clean)) return "teeth";
@@ -115,8 +115,8 @@ function visemeForWord(word: string): VoiceViseme {
 
 function expressionForText(text: string): FaceExpression {
   if (/[?¿]/.test(text)) return "curious";
-  if (/\\b(obrigad|excelente|ótim|perfeit|feliz|consegui|bem-vind)\\w*/i.test(text) || /[!]/.test(text)) return "friendly";
-  if (/\\b(atenção|cuidado|erro|risco|perigo|importante|problema)\\w*/i.test(text)) return "serious";
+  if (/\b(obrigad|excelente|ótim|perfeit|feliz|consegui|bem-vind)\w*/i.test(text) || /[!]/.test(text)) return "friendly";
+  if (/\b(atenção|cuidado|erro|risco|perigo|importante|problema)\w*/i.test(text)) return "serious";
   return "neutral";
 }
 
