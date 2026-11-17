@@ -106,7 +106,7 @@ function ChatPage() {
               if (enabling && (!wake.supported || !mic.supported)) { toast.error("O modo de voz contínua exige reconhecimento de fala compatível. Use Chrome ou Edge e permita o microfone."); return; }
               if (!enabling) stopSpeaking();
               prefsStore.set((p) => ({ ...p, autoSpeak: enabling, wakeWordEnabled: enabling }));
-              toast.info(enabling ? "Modo de conversação ativado. Diga: Olá, Tunavi." : "Modo de conversação desativado.");
+              toast.info(enabling ? "Modo de conversação ativado. Diga: Olá." : "Modo de conversação desativado.");
             }} aria-pressed={prefs.autoSpeak && prefs.wakeWordEnabled} className={cn("inline-flex h-8 items-center gap-1.5 rounded-full px-2.5 text-[10px] font-mono uppercase tracking-wide ring-1 transition",prefs.autoSpeak && prefs.wakeWordEnabled ? "bg-vio/25 text-lav ring-vio/50" : "text-lav/50 ring-lav/10 hover:bg-lav/5")} title="Ativar ou desativar conversa por voz contínua">
               <AudioLines className="h-3.5 w-3.5" /> <span className="hidden sm:inline">{prefs.autoSpeak && prefs.wakeWordEnabled ? "JARVIS ativo" : "Modo JARVIS"}</span>
             </button>
@@ -266,10 +266,10 @@ function ChatPage() {
             </label>
             <label className="flex items-center gap-2 text-[11px] text-lav/55">
               <input type="checkbox" className="accent-violet-500" checked={prefs.wakeWordEnabled} onChange={(e) => { if (e.target.checked && !wake.supported) { toast.error("Palavra-chave não suportada neste navegador."); return; } prefsStore.set((p) => ({ ...p, wakeWordEnabled: e.target.checked })); }} />
-              Ativar “Olá, Tunavi”
+              Ativar palavra-chave “Olá”
             </label>
           </div>
-          {prefs.wakeWordEnabled && <p className="mt-1 px-1 text-[10px] text-lav/35">A escuta funciona somente com esta página aberta e visível, usando o reconhecimento de fala do navegador. A TUNAVI não mantém gravações de áudio. Diga “Olá, Tunavi” para iniciar uma fala; aguarde a resposta e fale novamente para continuar.</p>}
+          {prefs.wakeWordEnabled && <p className="mt-1 px-1 text-[10px] text-lav/35">A escuta funciona somente com esta página aberta e visível, usando o reconhecimento de fala do navegador. A TUNAVI não mantém gravações de áudio. Diga “Olá” para iniciar uma fala; aguarde a resposta e fale novamente para continuar.</p>}
         </div>
       </section>
 
