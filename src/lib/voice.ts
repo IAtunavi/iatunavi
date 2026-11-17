@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { setActivity, setVoiceMouthLevel } from "./assistant";
+import { setActivity, setFaceExpression, setVoiceMouthLevel, setVoiceViseme } from "./assistant";
 import { prefsStore } from "./data";
 
 type Recognition = {
@@ -96,6 +96,28 @@ export function getPtVoices(): SpeechSynthesisVoice[] {
 export function getPreferredMaleVoice(): SpeechSynthesisVoice | undefined {
   const voices = getPtVoices();
   return voices.find((voice) => /male|masculino|daniel|jorge|antonio|ricardo|felipe|lucas/i.test(voice.name)) ?? voices[0];
+}
+
+type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
+type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
+
+function visemeForWord(word: string): VoiceViseme {
+  const clean = word.toLocaleLowerCase("pt-BR").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "");
+  if (!clean) return "rest";
+  if (/^[bmp]/.test(clean) || /[bmp]$/.test(clean)) return "closed";
+  if (/^[fv]/.test(clean) || /[fv]/.test(clean)) return "teeth";
+  const vowel = clean.match(/[aeiou]/)?.[0];
+  if (vowel === "u" || vowel === "o") return "round";
+  if (vowel === "i" || vowel === "e") return "wide";
+  if (vowel === "a") return "open";
+  return "rest";
+}
+
+function expressionForText(text: string): FaceExpression {
+  if (/[?¿]/.test(text)) return "curious";
+  if (/\\b(obrigad|excelente|ótim|perfeit|feliz|consegui|bem-vind)\\w*/i.test(text) || /[!]/.test(text)) return "friendly";
+  if (/\\b(atenção|cuidado|erro|risco|perigo|importante|problema)\\w*/i.test(text)) return "serious";
+  return "neutral";
 }
 
 /** Read text aloud with the voice settings from the Voz module. */
