@@ -21,6 +21,11 @@ type Settings = {
   maintenance_mode: boolean;
   maintenance_message: string;
   modules: Record<string, boolean>;
+  free_daily_limit: number;
+  pro_daily_limit: number;
+  free_max_tokens: number;
+  pro_max_tokens: number;
+  pro_modules: string[];
 };
 
 function json(status: number, error: string) {
@@ -52,6 +57,19 @@ export async function gateAiRequest(request: Request, module: string, requirePro
   const { data: authData, error: authError } = await supabaseAdmin.auth.getUser(auth.slice(7));
   if (authError || !authData.user) return { error: json(401, "Sua sessão expirou. Entre novamente para continuar.") };
   const userId = authData.user.id;
+
+  // Plan-aware limits: admins and active Pro subscribers get the Pro quota.
+  const [{ data: isPro }, { data: isAdmin }] = await Promise.all([
+    supabaseAdmin.rpc("is_pro", { _user_id: userId }),
+    supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "admin" }),
+  ]);
+  const proAccess = !!isPro || !!isAdmin;
+  const proModules = Array.isArray(data.pro_modules) ? (data.pro_modules as string[]) : [];
+  if (!proAccess && proModules.includes(module)) {
+    return { error: json(402, "Este recurso é exclusivo do TUNAVI Pro. Veja os planos para liberar.") };
+  }
+  settings.daily_message_limit = proAccess ? settings.pro_daily_limit : settings.free_daily_limit;
+  settings.max_output_tokens = Math.min(settings.max_output_tokens, proAccess ? settings.pro_max_tokens : settings.free_max_tokens);
 
   const since = new Date();
   since.setUTCHours(0, 0, 0, 0);
