@@ -136,20 +136,26 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
   u.onstart = () => {
     setActivity("voice", "respondendo");
     setVoiceMouthLevel(0.22);
+    setFaceExpression(expressionForText(clean));
   };
   u.onboundary = (event) => {
     if (event.name !== "word") return;
     const spokenWord = clean.slice(event.charIndex, event.charIndex + (event.charLength || 12));
-    const vowels = (spokenWord.match(/[aeiouáéíóúâêôãõ]/gi) ?? []).length;
-    const openness = Math.min(1, 0.18 + vowels * 0.17 + (/[áéíóúâêôãõ]/i.test(spokenWord) ? 0.12 : 0));
+    const viseme = visemeForWord(spokenWord);
+    const openness = viseme === "open" ? 0.92 : viseme === "wide" ? 0.48 : viseme === "round" ? 0.62 : viseme === "teeth" ? 0.28 : viseme === "closed" ? 0.08 : 0.2;
+    setVoiceViseme(viseme);
     setVoiceMouthLevel(openness);
   };
   u.onend = () => {
     setVoiceMouthLevel(0);
+    setVoiceViseme("rest");
+    setFaceExpression("neutral");
     setActivity("voice", null);
   };
   u.onerror = () => {
     setVoiceMouthLevel(0);
+    setVoiceViseme("rest");
+    setFaceExpression("neutral");
     setActivity("voice", null);
   };
   window.speechSynthesis.speak(u);
@@ -159,6 +165,8 @@ export function speak(text: string, overrides?: { rate?: number; pitch?: number;
 export function stopSpeaking() {
   if (typeof window !== "undefined" && "speechSynthesis" in window) window.speechSynthesis.cancel();
   setVoiceMouthLevel(0);
+  setVoiceViseme("rest");
+  setFaceExpression("neutral");
   setActivity("voice", null);
 }
 
