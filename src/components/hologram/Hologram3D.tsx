@@ -43,22 +43,47 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
         const camera = new THREE.PerspectiveCamera(30, 1, 0.1, 30);
         camera.position.set(0, 0.05, 5.2);
 
-        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "low-power" });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+        renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true, powerPreference: "high-performance" });
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
         renderer.setClearColor(0x000000, 0);
         renderer.outputColorSpace = THREE.SRGBColorSpace;
         renderer.toneMapping = THREE.ACESFilmicToneMapping;
-        renderer.toneMappingExposure = 1.25;
+        renderer.toneMappingExposure = 1.12;
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
-        scene.add(new THREE.AmbientLight(0x9b83ff, 2.1));
-        const key = new THREE.PointLight(0xd9caff, 38, 12);
-        key.position.set(-2, 2.4, 3.5);
+        // A studio environment gives physically based VRM materials believable reflections.
+        let environmentTarget: any;
+        try {
+          const roomModuleUrl = "https://esm.sh/three@0.180.0/examples/jsm/environments/RoomEnvironment.js?deps=three@0.180.0";
+          const { RoomEnvironment } = await import(/* @vite-ignore */ roomModuleUrl);
+          if (disposed) return;
+          const pmrem = new THREE.PMREMGenerator(renderer);
+          const room = new RoomEnvironment();
+          environmentTarget = pmrem.fromScene(room, 0.04);
+          scene.environment = environmentTarget.texture;
+          room.dispose();
+          pmrem.dispose();
+        } catch (environmentError) {
+          console.warn("[TUNAVI] Ambiente de estúdio indisponível; usando iluminação direta.", environmentError);
+        }
+
+        scene.add(new THREE.HemisphereLight(0xd9d2ff, 0x21182d, 1.25));
+        const key = new THREE.DirectionalLight(0xffe4d2, 3.2);
+        key.position.set(-3.5, 5, 5);
+        key.castShadow = true;
+        key.shadow.mapSize.set(1024, 1024);
+        key.shadow.camera.near = 0.1;
+        key.shadow.camera.far = 14;
         scene.add(key);
-        const rim = new THREE.PointLight(0x713cff, 45, 10);
-        rim.position.set(2, 0.4, -1.5);
+        const fill = new THREE.DirectionalLight(0xb8a4ff, 1.35);
+        fill.position.set(4, 1.5, 3);
+        scene.add(fill);
+        const rim = new THREE.DirectionalLight(0x8b5cf6, 2.8);
+        rim.position.set(2.5, 3, -4);
         scene.add(rim);
-        const faceLight = new THREE.PointLight(0x8f72ff, 15, 8);
-        faceLight.position.set(0, 0.1, 3);
+        const faceLight = new THREE.PointLight(0xffd8c2, 5, 7, 2);
+        faceLight.position.set(0, 0.4, 3.2);
         scene.add(faceLight);
 
         const hologram = new THREE.Group();
@@ -93,18 +118,16 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
             vrm = gltf.userData.vrm;
             if (!vrm?.scene) throw new Error("O arquivo carregado não contém um avatar VRM válido.");
             vrm.scene.traverse((object: any) => {
-              if (object.isMesh && object.material) {
-                const materials = Array.isArray(object.material) ? object.material : [object.material];
-                materials.forEach((material: any) => {
-                  material.transparent = true;
-                  material.opacity = Math.min(material.opacity ?? 1, 0.94);
-                  if (material.emissive) {
-                    material.emissive.set(0x321078);
-                    material.emissiveIntensity = 0.22;
-                  }
-                  material.needsUpdate = true;
-                });
-              }
+              if (!object.isMesh) return;
+              object.castShadow = true;
+              object.receiveShadow = true;
+              const materials = Array.isArray(object.material) ? object.material : [object.material];
+              materials.forEach((material: any) => {
+                // Preserve the model's original skin, eye, hair and clothing textures.
+                // Only tune environment response; do not wash the model with a purple emissive overlay.
+                if ("envMapIntensity" in material) material.envMapIntensity = 1.15;
+                material.needsUpdate = true;
+              });
             });
             const bounds = new THREE.Box3().setFromObject(vrm.scene);
             const size = bounds.getSize(new THREE.Vector3());
@@ -140,20 +163,20 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
         hologram.add(head);
 
         const skin = new THREE.MeshStandardMaterial({
-          color: 0x9d8bdc, metalness: 0.62, roughness: 0.27,
-          emissive: 0x24105b, emissiveIntensity: 0.9, transparent: true, opacity: 0.94,
+          color: 0xc58f7a, metalness: 0.02, roughness: 0.58,
+          emissive: 0x160b0b, emissiveIntensity: 0.035,
         });
         const highlight = new THREE.MeshStandardMaterial({
-          color: 0xd9ceff, metalness: 0.72, roughness: 0.2,
-          emissive: 0x6845d8, emissiveIntensity: 1.35,
+          color: 0xe7b9a5, metalness: 0.04, roughness: 0.42,
+          emissive: 0x1a0b12, emissiveIntensity: 0.025,
         });
         const dark = new THREE.MeshStandardMaterial({
-          color: 0x171027, metalness: 0.35, roughness: 0.3,
-          emissive: 0x402078, emissiveIntensity: 0.8,
+          color: 0x17121b, metalness: 0.08, roughness: 0.48,
+          emissive: 0x090611, emissiveIntensity: 0.025,
         });
         const hairMat = new THREE.MeshStandardMaterial({
-          color: 0x211637, metalness: 0.58, roughness: 0.25,
-          emissive: 0x45218d, emissiveIntensity: 0.65,
+          color: 0x211915, metalness: 0.04, roughness: 0.76,
+          emissive: 0x0a0708, emissiveIntensity: 0.02,
         });
 
         const addSphere = (parent: any, material: any, position: [number, number, number], scale: [number, number, number]) => {
@@ -310,7 +333,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
           });
 
           const glow = talking ? 1.5 : currentState === "ouvindo" ? 1.25 : 0.95;
-          skin.emissiveIntensity = glow;
+          skin.emissiveIntensity = talking ? 0.075 : currentState === "ouvindo" ? 0.055 : 0.035;
 
           if (vrm) {
             // State-aware body language: welcoming while listening, thoughtful while
@@ -368,6 +391,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null,
           canvas.removeEventListener("pointermove", onPointer);
           canvas.removeEventListener("pointerleave", onLeave);
           if (vrm?.scene) scene.remove(vrm.scene);
+          environmentTarget?.dispose?.();
           scene.traverse((object: any) => {
             object.geometry?.dispose?.();
             if (Array.isArray(object.material)) object.material.forEach((material: any) => material.dispose?.());
