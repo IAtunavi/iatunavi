@@ -195,6 +195,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
         // Eyes, irises and brows are grouped so the lids can blink naturally.
         const eyes: any[] = [];
         const brows: any[] = [];
+        const cheeks: any[] = [];
+
         for (const side of [-1, 1]) {
           const eye = new THREE.Group();
           eye.position.set(side * 0.275, 0.105, 0.525);
@@ -208,6 +210,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
           const brow = addSphere(head, hairMat, [side * 0.28, 0.27, 0.53], [0.22, 0.055, 0.075]);
           brow.rotation.z = side * -0.1;
           brows.push(brow);
+          const cheek = addSphere(head, skin, [side * 0.43, -0.28, 0.43], [0.19, 0.12, 0.11]);
+          cheeks.push(cheek);
         }
 
         // Mouth cavity and lips: the opening is driven by the assistant's voice level.
@@ -217,6 +221,10 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
         addSphere(mouth, dark, [0, 0, 0], [0.19, 0.035, 0.035]);
         addSphere(mouth, highlight, [0, 0.035, 0.006], [0.18, 0.025, 0.035]);
         addSphere(mouth, skin, [0, -0.045, 0.004], [0.17, 0.035, 0.035]);
+        const smileCorners = [-1, 1].map((side) => {
+          const corner = addSphere(mouth, highlight, [side * 0.165, 0.005, 0.012], [0.035, 0.025, 0.018]);
+          return { mesh: corner, side };
+        });
 
         // A faint digital collar gives the bust a projected, non-photographic finish.
         const collar = new THREE.Mesh(new THREE.TorusGeometry(0.37, 0.018, 8, 64), highlight);
@@ -280,8 +288,22 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
 
           const blinkCycle = t % 4.6;
           const blink = blinkCycle > 0.12 && blinkCycle < 0.29 ? Math.sin(((blinkCycle - 0.12) / 0.17) * Math.PI) : 0;
-          const eyeScale = 1 - blink * 0.92;
-          eyes.forEach((eye) => { eye.scale.y += (eyeScale - eye.scale.y) * 0.45; });
+          const eyeScale = (currentExpression === "serious" ? 0.84 : currentExpression === "curious" ? 1.12 : 1) * (1 - blink * 0.92);
+          eyes.forEach((eye) => {
+            eye.scale.y += (eyeScale - eye.scale.y) * 0.32;
+            eye.rotation.y += (lookX * 0.22 - eye.rotation.y) * 0.12;
+            eye.rotation.x += (-lookY * 0.16 - eye.rotation.x) * 0.12;
+          });
+          const smile = currentExpression === "friendly" ? 1 : 0;
+          smileCorners.forEach(({ mesh, side }) => {
+            mesh.position.y += (0.005 + smile * 0.055 - mesh.position.y) * 0.16;
+            mesh.position.x += (side * (0.165 + smile * 0.008) - mesh.position.x) * 0.16;
+          });
+          cheeks.forEach((cheek) => {
+            const target = currentExpression === "friendly" ? 1.12 : currentExpression === "curious" ? 1.04 : 1;
+            cheek.scale.x += (0.19 * target - cheek.scale.x) * 0.1;
+            cheek.scale.y += (0.12 * target - cheek.scale.y) * 0.1;
+          });
 
           const glow = talking ? 1.5 : currentState === "ouvindo" ? 1.25 : 0.95;
           skin.emissiveIntensity = glow;
