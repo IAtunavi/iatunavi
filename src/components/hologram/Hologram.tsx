@@ -90,7 +90,16 @@ export function Hologram({
         <div
           className="relative mt-0 h-[310px] w-[300px] overflow-hidden holo-mask"
           style={{
-            animation: state === "respondendo" ? "holo-pulse-glow 1.2s ease-in-out infinite" : "holo-breathe 5s ease-in-out infinite",
+            animation:
+              state === "respondendo"
+                ? "holo-pulse-glow 1.2s ease-in-out infinite, holo-head-speak 2.8s ease-in-out infinite"
+                : state === "ouvindo"
+                  ? "holo-head-listen 3.2s ease-in-out infinite"
+                  : state === "processando"
+                    ? "holo-head-think 2.6s ease-in-out infinite"
+                    : state === "executando"
+                      ? "holo-head-execute 2.2s ease-in-out infinite"
+                      : "holo-head-rest 5s ease-in-out infinite",
             filter: "drop-shadow(0 0 22px color-mix(in oklab, var(--vio) 55%, transparent))",
           }}
         >
