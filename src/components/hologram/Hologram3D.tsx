@@ -109,7 +109,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
             vrmHead = vrm.humanoid?.getNormalizedBoneNode?.("head") ?? null;
             if (vrm.lookAt) vrm.lookAt.target = lookTarget;
             hologram.visible = false;
-            const fallback = canvas.closest("[data-holo-fallback]") as HTMLElement | null;
+            const fallback = canvas.closest("[data-holo-depth]")?.querySelector<HTMLElement>("[data-holo-fallback]") ?? null;
             if (fallback) {
               fallback.style.opacity = "0";
               fallback.style.transition = "opacity 700ms ease";
