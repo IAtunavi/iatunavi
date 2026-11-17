@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import type { AssistantState } from "@/lib/assistant";
 
-type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";\ntype FaceExpression = "neutral" | "friendly" | "curious" | "serious";\ntype Props = { state: AssistantState; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression };
+type VoiceViseme = "rest" | "open" | "wide" | "round" | "closed" | "teeth";
+type FaceExpression = "neutral" | "friendly" | "curious" | "serious";
+type Props = { state: AssistantState; mouthLevel: number; viseme: VoiceViseme; expression: FaceExpression };
 
 /**
  * Lightweight procedural 3D bust. Three.js is loaded on demand so the rest of
@@ -115,7 +117,8 @@ export function Hologram3D({ state, mouthLevel, viseme, expression }: Props) {
         }
 
         // Eyes, irises and brows are grouped so the lids can blink naturally.
-        const eyes: any[] = [];\n        const brows: any[] = [];
+        const eyes: any[] = [];
+        const brows: any[] = [];
         for (const side of [-1, 1]) {
           const eye = new THREE.Group();
           eye.position.set(side * 0.275, 0.105, 0.525);
