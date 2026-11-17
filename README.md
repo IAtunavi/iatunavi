@@ -77,3 +77,8 @@ O recurso requer contexto seguro (HTTPS ou localhost), navegador compatível, c�
 ## Gestos expressivos por estado
 
 O avatar VRM usa os ossos humanoides disponíveis para apresentar linguagem corporal diferente em cada estado: postura receptiva e pequenos acenos ao ouvir, inclinação contemplativa ao processar, gestos alternados e mãos abertas ao falar, e postura firme durante execução. Ombros, braços, antebraços e mãos são interpolados suavemente a partir da pose de repouso. Modelos que não disponibilizem algum osso continuam funcionando; os canais ausentes são ignorados. A animação é procedural e não representa captura de movimento.
+
+
+## Expressões faciais do avatar
+
+O holograma procedural adiciona microanimações de olhar, pálpebras, sorriso e bochechas de acordo com a expressão atual do assistente. A expressão amigável eleva suavemente os cantos da boca e realça as bochechas; curiosidade amplia levemente os olhos; seriedade reduz a abertura dos olhos. O olhar acompanha a posição rastreada quando o recurso de presença visual está ativado ou o cursor como alternativa. As transições são interpoladas e o avatar VRM mantém os presets de expressão facial existentes quando disponíveis.
