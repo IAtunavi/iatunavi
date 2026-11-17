@@ -118,7 +118,7 @@ export function Hologram3D({ state, mouthLevel, viseme, expression, gaze = null 
               const bone = humanoid?.getNormalizedBoneNode?.(name);
               if (bone) bodyBones[name] = { bone, rest: { x: bone.rotation.x, y: bone.rotation.y, z: bone.rotation.z } };
             }
-            vrmHead = bodyBones.head?.bone ?? null;
+            vrmHead = bodyBones["head"]?.bone ?? null;
             if (vrm.lookAt) vrm.lookAt.target = lookTarget;
             hologram.visible = false;
             const fallback = canvas.closest("[data-holo-depth]")?.querySelector<HTMLElement>("[data-holo-fallback]") ?? null;
