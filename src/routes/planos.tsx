@@ -41,8 +41,9 @@ const features = {
 };
 function PlanosPage() {
   const [cycle, setCycle] = useState<Cycle>("mensal");
-  const { user, isAdmin } = useAuth();
+  const { user, session, isAdmin } = useAuth();
   const plan = useUserPlan();
+  const [checkoutLoading, setCheckoutLoading] = useState<"pro" | "ultra" | null>(null);
   const settingsQuery = useQuery({
     queryKey: ["app-settings", "plan-pricing"],
     queryFn: async () => {
@@ -71,9 +72,26 @@ function PlanosPage() {
   const price = (tier: "pro" | "ultra") => cycle === "mensal"
     ? settings[tier === "pro" ? "pro_price_monthly" : "ultra_price_monthly"]
     : settings[tier === "pro" ? "pro_price_yearly" : "ultra_price_yearly"];
-  const activate = (tier: "pro" | "ultra") => {
+  const activate = async (tier: "pro" | "ultra") => {
     playSound("tap");
-    toast("Checkout em breve via Mercado Pago", { description: `A contratação do TUNAVI ${tier.toUpperCase()} estará disponível em breve.` });
+    if (!session?.access_token) {
+      toast.error("Entre na sua conta para contratar um plano.");
+      return;
+    }
+    setCheckoutLoading(tier);
+    try {
+      const response = await fetch("/api/billing/checkout", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ plan: tier, cycle: cycle === "mensal" ? "monthly" : "yearly" }),
+      });
+      const result = await response.json() as { checkoutUrl?: string; error?: string };
+      if (!response.ok || !result.checkoutUrl) throw new Error(result.error || "Não foi possível iniciar o checkout.");
+      window.location.assign(result.checkoutUrl);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Falha ao iniciar pagamento.");
+      setCheckoutLoading(null);
+    }
   };
   const expiry = plan.currentPeriodEnd
     ? new Date(plan.currentPeriodEnd).toLocaleDateString("pt-BR")
@@ -112,7 +130,7 @@ function PlanosPage() {
             <p className="font-mono text-[10px] text-lav/45">{card.tier === "free" ? "Para sempre" : cycle === "mensal" ? "Cobrança mensal" : `Equivale a R$ ${fmt(card.price / 12)} por mês`}</p>
             <ul className="mt-6 flex-1 space-y-3">{card.items.map(item => <li key={item} className="flex gap-2.5 text-[13px] text-lav/80"><Check className={cn("mt-0.5 h-4 w-4 shrink-0", card.tier === "ultra" ? "text-amber-300" : "text-vio")} />{item}</li>)}</ul>
             {card.tier === "free" ? user ? <button disabled className={cn(pillButton, "mt-7 w-full cursor-not-allowed opacity-60")}>{current ? "Plano Atual" : "Plano Básico"}</button> : <Link to="/entrar" className={cn(pillButton, "mt-7 w-full")}>Começar grátis</Link>
-              : <button type="button" disabled={isDisabled || isAdmin} onClick={() => activate(card.tier)} className={cn(primaryButton, "mt-7 h-11 w-full text-[13px]", card.tier === "ultra" && "border border-amber-400/60 bg-amber-500/15 text-amber-200 hover:bg-amber-500/25", (isDisabled || isAdmin) && "cursor-default opacity-60")}>{isAdmin ? "Acesso de Administrador" : current ? "Seu Plano Ativo" : card.tier === "pro" ? "Ativar Modo Pro" : "Desbloquear J.A.R.V.I.S. Ultra"}</button>}
+              : <button type="button" disabled={isDisabled || isAdmin || checkoutLoading !== null} onClick={() => void activate(card.tier)} className={cn(primaryButton, "mt-7 h-11 w-full text-[13px]", card.tier === "ultra" && "border border-amber-400/60 bg-amber-500/15 text-amber-200 hover:bg-amber-500/25", (isDisabled || isAdmin) && "cursor-default opacity-60")}>{checkoutLoading === card.tier ? "Conectando ao Mercado Pago..." : isAdmin ? "Acesso de Administrador" : current ? "Seu Plano Ativo" : card.tier === "pro" ? "Ativar Modo Pro" : "Desbloquear J.A.R.V.I.S. Ultra"}</button>}
           </GlassCard>;
         })}
       </section>
@@ -124,7 +142,7 @@ function PlanosPage() {
           <tbody>{comparisons.map(([label, a, b, c]) => <tr key={label} className="border-b border-lav/5 last:border-0"><td className="px-5 py-3 text-lav/80">{label}</td>{[a,b,c].map((v,i)=><td key={i} className={cn("px-5 py-3 font-mono text-[11px]", i===2 ? "text-amber-200" : i===1 ? "text-lav" : "text-lav/55")}>{v === "—" ? <Minus className="h-4 w-4 text-lav/25" /> : v}</td>)}</tr>)}</tbody>
         </table>
       </GlassCard>
-      <p className="mt-4 text-center font-mono text-[10px] text-lav/40">Preços em reais · Checkout via Mercado Pago em breve</p>
+      <p className="mt-4 text-center font-mono text-[10px] text-lav/40">Preços em reais · Pagamento recorrente processado pelo Mercado Pago</p>
     </div>
   </PageContainer>;
 }
