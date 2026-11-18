@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { noticesStore, prefsStore, formatTime } from "@/lib/data";
 import { useAuth } from "@/lib/auth";
+import { useUserPlan } from "@/lib/use-plan";
 import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { Clock } from "./Clock";
@@ -24,6 +25,8 @@ export function Header({ onOpenNav }: { onOpenNav: () => void }) {
   const notices = noticesStore.useValue();
   const unread = notices.filter((n) => !n.read).length;
   const { user, isAdmin, signOut } = useAuth();
+  const userPlan = useUserPlan();
+  const planLabel = isAdmin ? "Administrador" : userPlan.tier === "ultra" ? "Ultra" : userPlan.tier === "pro" ? "Pro" : "Explorador";
   const navigate = useNavigate();
 
   return (
@@ -124,11 +127,13 @@ export function Header({ onOpenNav }: { onOpenNav: () => void }) {
           <DropdownMenuTrigger asChild>
             <button type="button" className="relative shrink-0 rounded-full" aria-label="Menu do perfil">
               <img src={avatar} alt="" width={36} height={36} className="h-9 w-9 rounded-full object-cover ring-1 ring-vio/60" />
-              {isAdmin && (
-                <span className="absolute -bottom-0.5 -right-0.5 grid h-4 w-4 place-items-center rounded-full bg-vio ring-2 ring-ink">
-                  <Crown className="h-2.5 w-2.5 text-primary-foreground" />
-                </span>
-              )}
+              {isAdmin ? (
+                <span className="absolute -bottom-1 -right-2 inline-flex items-center gap-0.5 rounded-full bg-amber-400 px-1.5 py-0.5 font-mono text-[8px] font-bold text-ink ring-2 ring-ink"><Crown className="h-2.5 w-2.5" />ADMIN</span>
+              ) : userPlan.tier === "ultra" ? (
+                <span className="absolute -bottom-1 -right-1 rounded-full bg-amber-400 px-1.5 py-0.5 font-mono text-[8px] font-bold text-ink ring-2 ring-ink shadow-[0_0_12px_rgba(245,158,11,.8)]">ULTRA</span>
+              ) : userPlan.tier === "pro" ? (
+                <span className="absolute -bottom-1 -right-1 rounded-full bg-vio px-1.5 py-0.5 font-mono text-[8px] font-bold text-white ring-2 ring-ink shadow-[0_0_12px_rgba(124,58,237,.8)]">PRO</span>
+              ) : null}
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-60 border-lav/15 glass">
@@ -137,6 +142,12 @@ export function Header({ onOpenNav }: { onOpenNav: () => void }) {
               <p className="truncate font-mono text-[10px] text-lav/50">{user?.email ?? "Dados salvos neste navegador"}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator className="bg-lav/10" />
+            <div className="px-2 py-2 text-[11px] text-lav/65">Plano: <span className={cn("font-semibold", userPlan.tier === "ultra" ? "text-amber-300" : userPlan.tier === "pro" ? "text-vio" : "text-lav")}>{planLabel}</span></div>
+            {!isAdmin && userPlan.tier === "free" && (
+              <DropdownMenuItem onSelect={() => navigate({ to: "/planos" })} className="text-lav">
+                <Sparkles className="h-4 w-4 text-vio" /> Fazer upgrade para Pro / Ultra
+              </DropdownMenuItem>
+            )}
             {isAdmin && (
               <DropdownMenuItem onSelect={() => navigate({ to: "/super-painel" })} className="text-lav">
                 <Crown className="h-4 w-4 text-vio" /> Super Painel
