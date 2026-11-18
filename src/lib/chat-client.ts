@@ -1,5 +1,5 @@
 import { Chat } from "@ai-sdk/react";
-import { DefaultChatTransport, type UIMessage } from "ai";
+import { DefaultChatTransport, lastAssistantMessageIsCompleteWithToolCalls, type UIMessage } from "ai";
 import { authHeaders, buildAiContext } from "./ai-context";
 import { prefsStore } from "./data";
 
@@ -39,6 +39,7 @@ export function getChat() {
   chat = new Chat<UIMessage>({
     id: "tunavi-main",
     messages: loadMessages(),
+    sendAutomaticallyWhen: lastAssistantMessageIsCompleteWithToolCalls,
     transport: new DefaultChatTransport({
       api: "/api/chat",
       prepareSendMessagesRequest: async ({ messages, body }) => ({
