@@ -39,8 +39,18 @@ export function useUserPlan(): UserPlan {
     const { data } = supabase.auth.onAuthStateChange(() => {
       void queryClient.invalidateQueries({ queryKey: ["user-plan"] });
     });
-    return () => data.subscription.unsubscribe();
-  }, [queryClient]);
+    const channel = user?.id
+      ? supabase.channel("user-plan-" + user.id)
+          .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: "user_id=eq." + user.id }, () => {
+            void queryClient.invalidateQueries({ queryKey: ["user-plan", user.id] });
+          })
+          .subscribe()
+      : null;
+    return () => {
+      data.subscription.unsubscribe();
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, [queryClient, user?.id]);
 
   const row = subscriptionQuery.data;
   const status = row?.status ?? "inactive";
