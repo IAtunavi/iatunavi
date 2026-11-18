@@ -47,8 +47,13 @@ jobs:
             src/routes/criador.tsx \
             src/routes/api/media.ts \
             src/components/creator/MediaCreator.tsx \
+            src/routes/api/billing/checkout.ts \
+            src/routes/api/billing/webhook.ts \
+            src/route-augmentations.d.ts \
             src/routes/api/media.ts \
             src/components/creator/MediaCreator.tsx \
+            src/routes/api/billing/checkout.ts \
+            src/routes/api/billing/webhook.ts \
             src/routes/agentes.tsx \
             src/routes/memoria.tsx \
             src/routes/voz.tsx \
