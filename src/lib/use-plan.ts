@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { effectiveTier, type Tier } from "@/lib/plans";
+import { effectiveTier, isSubscriptionActive, type Tier } from "@/lib/plans";
 
 export type UserPlan = {
   tier: Tier;
@@ -55,7 +55,7 @@ export function useUserPlan(): UserPlan {
   const row = subscriptionQuery.data;
   const status = row?.status ?? "inactive";
   const plan = row?.plan ?? "free";
-  const active = status === "active" || status === "authorized" || status === "trialing";
+  const active = isSubscriptionActive(status, row?.current_period_end);
   const tier = effectiveTier(active ? plan : "free", isAdmin);
 
   return {
