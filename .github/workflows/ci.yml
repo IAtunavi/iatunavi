@@ -64,6 +64,11 @@ jobs:
             src/components/shell/Sidebar.tsx \
             src/lib/settings.ts \
             src/lib/auth.tsx \
+            src/lib/plans.ts \
+            src/lib/use-plan.ts \
+            src/routes/planos.tsx \
+            src/components/shell/Header.tsx \
+            src/test/plans.test.ts \
             src/lib/ai/tunavi.server.ts \
             src/routes/index.tsx \
             src/routes/entrar.tsx \
@@ -82,6 +87,6 @@ jobs:
       - name: TypeScript check
         run: bunx tsc --noEmit
       - name: Tests
-        run: bun run test --passWithNoTests
+        run: bunx vitest run
       - name: Production build
         run: bun run build
