@@ -6,7 +6,7 @@ const checkoutSchema = z.object({
   cycle: z.enum(["monthly", "yearly"]),
 });
 
-export const Route = createFileRoute("/api/billing/checkout" as never)({
+export const Route = createFileRoute("/api/billing/checkout")({
   server: {
     handlers: {
       POST: async ({ request }) => {
