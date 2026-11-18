@@ -28,7 +28,7 @@ async function verifySignature(request: Request, dataId: string, secret: string)
   return safeEqualHex(expected, received);
 }
 
-export const Route = createFileRoute("/api/billing/webhook" as never)({
+export const Route = createFileRoute("/api/billing/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
