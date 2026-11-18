@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useId } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -16,6 +16,9 @@ export type UserPlan = {
 export function useUserPlan(): UserPlan {
   const { user, isAdmin, loading: authLoading } = useAuth();
   const queryClient = useQueryClient();
+  // Header and Planos can mount this hook at the same time. Each hook instance
+  // needs its own channel because Supabase forbids adding listeners after subscribe().
+  const channelId = useId().replace(/:/g, "");
 
   const subscriptionQuery = useQuery({
     queryKey: ["user-plan", user?.id ?? "anonymous"],
@@ -40,7 +43,7 @@ export function useUserPlan(): UserPlan {
       void queryClient.invalidateQueries({ queryKey: ["user-plan"] });
     });
     const channel = user?.id
-      ? supabase.channel("user-plan-" + user.id)
+      ? supabase.channel("user-plan-" + user.id + "-" + channelId)
           .on("postgres_changes", { event: "*", schema: "public", table: "subscriptions", filter: "user_id=eq." + user.id }, () => {
             void queryClient.invalidateQueries({ queryKey: ["user-plan", user.id] });
           })
@@ -50,7 +53,7 @@ export function useUserPlan(): UserPlan {
       data.subscription.unsubscribe();
       if (channel) void supabase.removeChannel(channel);
     };
-  }, [queryClient, user?.id]);
+  }, [channelId, queryClient, user?.id]);
 
   const row = subscriptionQuery.data;
   const status = row?.status ?? "inactive";
