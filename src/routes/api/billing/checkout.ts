@@ -47,7 +47,7 @@ export const Route = createFileRoute("/api/billing/checkout")({
 
         const { data: existing, error: existingError } = await supabaseAdmin
           .from("subscriptions")
-          .select("plan,status,current_period_end")
+          .select("plan,status,current_period_end,mercadopago_subscription_id")
           .eq("user_id", authData.user.id)
           .maybeSingle();
         if (existingError) {
