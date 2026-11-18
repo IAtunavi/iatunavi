@@ -16,6 +16,7 @@ import { useUserPlan } from "@/lib/use-plan";
 import { playSound } from "@/lib/sound";
 import { cn } from "@/lib/utils";
 import { Clock } from "./Clock";
+import { CreditBalance } from "./CreditBalance";
 import { AudioLines, Pause, Play } from "lucide-react";
 import { currentTrackTitle, playerStore, controlHudPlayer } from "@/lib/hud-player";
 
