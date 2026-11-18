@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 
 function safeEqualHex(a: string, b: string): boolean {
   if (!/^[0-9a-f]{64}$/i.test(a) || !/^[0-9a-f]{64}$/i.test(b)) return false;
-  const left = new Uint8Array(a.match(/.{2}/g)!.map((v) => Number.parseInt(v, 16)));
+  const left = new Uint8Array(a.match(/.{2}/g)!.map((v) => Number.parseInt(v ?? "00", 16)));
   const right = new Uint8Array(b.match(/.{2}/g)!.map((v) => Number.parseInt(v, 16)));
   if (left.length !== right.length) return false;
   let diff = 0;
@@ -28,7 +28,7 @@ async function verifySignature(request: Request, dataId: string, secret: string)
   return safeEqualHex(expected, received);
 }
 
-export const Route = createFileRoute("/api/billing/webhook")({
+export const Route = createFileRoute("/api/billing/webhook" as never)({
   server: {
     handlers: {
       POST: async ({ request }) => {
