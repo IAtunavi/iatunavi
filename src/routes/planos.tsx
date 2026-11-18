@@ -39,17 +39,6 @@ const features = {
   pro: ["300 mensagens/dia com modelos avançados", "Voz otimizada e 6 agentes especializados", "Criador de Mídia e Pesquisa Avançada", "Relatórios executivos e player de áudio HUD", "Histórico e memória de 30 dias", "Selo PRO luminoso no perfil"],
   ultra: ["1.000 mensagens/dia com raciocínio profundo", "Assistente virtual completo com ações automatizadas", "Desktop Bridge (agente local para PC) e Casa Inteligente (IoT)", "Voz neural ultrarrealista com viva-voz contínuo", "Memória permanente perpétua", "Selo ULTRA dourado no HUD"],
 };
-const comparisons: [string, string, string, string][] = [
-  ["Mensagens diárias", "50", "300", "1.000"],
-  ["Tokens por resposta", "2.048", "8.192", "16.384"],
-  ["Modelos", "Rápido (Groq / Terra)", "Modelos avançados", "Raciocínio profundo"],
-  ["Agentes", "Essenciais", "6 especializados", "Todos"],
-  ["Relatórios executivos", "—", "Incluído", "Incluído"],
-  ["Player de áudio HUD", "—", "Incluído", "Incluído"],
-  ["Módulos exclusivos", "—", "Criador de mídia e pesquisa", "Automação completa"],
-  ["Desktop Bridge / IoT", "—", "—", "Incluído"],
-];
-
 function PlanosPage() {
   const [cycle, setCycle] = useState<Cycle>("mensal");
   const { user, isAdmin } = useAuth();
@@ -64,6 +53,16 @@ function PlanosPage() {
     staleTime: 60_000,
   });
   const settings = { ...DEFAULTS, ...(settingsQuery.data ?? {}) };
+  const comparisons: [string, string, string, string][] = [
+    ["Mensagens diárias", String(settings.free_daily_limit), String(settings.pro_daily_limit), settings.ultra_daily_limit.toLocaleString("pt-BR")],
+    ["Tokens por resposta", settings.free_max_tokens.toLocaleString("pt-BR"), settings.pro_max_tokens.toLocaleString("pt-BR"), settings.ultra_max_tokens.toLocaleString("pt-BR")],
+    ["Modelos", "Rápido (Groq / Terra)", "Modelos avançados", "Raciocínio profundo"],
+    ["Agentes", "Essenciais", "6 especializados", "Todos"],
+    ["Relatórios executivos", "—", "Incluído", "Incluído"],
+    ["Player de áudio HUD", "—", "Incluído", "Incluído"],
+    ["Módulos exclusivos", "—", "Criador de mídia e pesquisa", "Automação completa"],
+    ["Desktop Bridge / IoT", "—", "—", "Incluído"],
+  ];
   const activeTier = plan.tier;
   const savings = useMemo(() => {
     const monthly = settings.pro_price_monthly * 12;
@@ -81,9 +80,9 @@ function PlanosPage() {
     : null;
 
   const cards = [
-    { tier: "free" as const, name: "EXPLORADOR", eyebrow: "COMECE GRÁTIS", price: 0, color: "border-lav/15", items: features.free },
-    { tier: "pro" as const, name: "TUNAVI PRO", eyebrow: "MAIS POPULAR", price: price("pro"), color: "border-vio/70 shadow-[0_0_30px_rgba(124,58,237,.18)]", items: features.pro },
-    { tier: "ultra" as const, name: "TUNAVI ULTRA", eyebrow: "J.A.R.V.I.S. COMPLETO", price: price("ultra"), color: "border-amber-400/70 shadow-[0_0_34px_rgba(245,158,11,.2)]", items: features.ultra },
+    { tier: "free" as const, name: "EXPLORADOR", eyebrow: "COMECE GRÁTIS", price: 0, color: "border-lav/15", items: features.free.map(item => item.replace("50 mensagens/dia", settings.free_daily_limit + " mensagens/dia")) },
+    { tier: "pro" as const, name: "TUNAVI PRO", eyebrow: "MAIS POPULAR", price: price("pro"), color: "border-vio/70 shadow-[0_0_30px_rgba(124,58,237,.18)]", items: features.pro.map(item => item.replace("300 mensagens/dia", settings.pro_daily_limit + " mensagens/dia")) },
+    { tier: "ultra" as const, name: "TUNAVI ULTRA", eyebrow: "J.A.R.V.I.S. COMPLETO", price: price("ultra"), color: "border-amber-400/70 shadow-[0_0_34px_rgba(245,158,11,.2)]", items: features.ultra.map(item => item.replace("1.000 mensagens/dia", settings.ultra_daily_limit.toLocaleString("pt-BR") + " mensagens/dia")) },
   ];
 
   return <PageContainer>
