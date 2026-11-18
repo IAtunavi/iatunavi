@@ -57,6 +57,9 @@ export const Route = createFileRoute("/api/billing/checkout")({
 
         const existingActive = ["active", "authorized", "trialing"].includes(existing?.status ?? "")
           && (!existing?.current_period_end || Date.parse(existing.current_period_end) > Date.now());
+        if (!existingActive && existing?.status === "pending" && existing.mercadopago_subscription_id) {
+          return Response.json({ error: "Você já possui uma contratação aguardando autorização. Conclua ou cancele o checkout anterior antes de iniciar outro." }, { status: 409 });
+        }
         const rank = (value: string | null | undefined) => value === "ultra" ? 2 : value === "pro" ? 1 : 0;
         if (existingActive && rank(existing?.plan) >= rank(body.plan)) {
           return Response.json({ error: "Você já possui este plano ou um plano superior ativo." }, { status: 409 });
@@ -119,7 +122,7 @@ export const Route = createFileRoute("/api/billing/checkout")({
         }
 
         const result = await mpResponse.json().catch(() => null) as
-          | { id?: string; init_point?: string; sandbox_init_point?: string; message?: string }
+          | { id?: string; init_point?: string; sandbox_init_point?: string; payer_id?: string | number; message?: string }
           | null;
         const checkoutUrl = result?.init_point || result?.sandbox_init_point;
         if (!mpResponse.ok || !result?.id || !checkoutUrl) {
@@ -128,6 +131,33 @@ export const Route = createFileRoute("/api/billing/checkout")({
             message: result?.message ?? "Resposta inválida",
           });
           return Response.json({ error: "O Mercado Pago não conseguiu iniciar a assinatura. Verifique suas credenciais e tente novamente." }, { status: 502 });
+        }
+
+        if (!existingActive) {
+          const { error: pendingError } = await supabaseAdmin.from("subscriptions").upsert({
+            user_id: authData.user.id,
+            plan: body.plan,
+            status: "pending",
+            provider: "mercadopago",
+            mercadopago_subscription_id: result.id,
+            mercadopago_payer_id: result.payer_id ? String(result.payer_id) : null,
+            current_period_end: null,
+            updated_at: new Date().toISOString(),
+            note: "Mercado Pago - " + body.cycle + " - aguardando autorização",
+          }, { onConflict: "user_id" });
+          if (pendingError) {
+            console.error("[billing] Não foi possível registrar checkout pendente:", pendingError.message);
+            try {
+              await fetch("https://api.mercadopago.com/preapproval/" + encodeURIComponent(result.id), {
+                method: "PUT",
+                headers: { Authorization: "Bearer " + accessToken, "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "cancelled" }),
+              });
+            } catch (cancelError) {
+              console.error("[billing] Não foi possível cancelar assinatura órfã:", cancelError);
+            }
+            return Response.json({ error: "Não foi possível preparar sua assinatura. Nenhuma cobrança foi ativada; tente novamente." }, { status: 500 });
+          }
         }
 
         return Response.json({
