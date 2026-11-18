@@ -33,3 +33,12 @@ export function canUse(tier: Tier, module: string, s: Pick<PlanSettings, "pro_mo
   const need = requiredTier(module, s);
   return !need || RANK[tier] >= RANK[need];
 }
+
+/** A assinatura só concede acesso enquanto estiver válida; sem data final, vale pelo status. */
+export function isSubscriptionActive(status: string | null | undefined, currentPeriodEnd: string | null | undefined, now = Date.now()) {
+  const activeStatus = status === "active" || status === "authorized" || status === "trialing";
+  if (!activeStatus) return false;
+  if (!currentPeriodEnd) return true;
+  const end = Date.parse(currentPeriodEnd);
+  return Number.isFinite(end) && end > now;
+}
