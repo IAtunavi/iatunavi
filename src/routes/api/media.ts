@@ -63,6 +63,7 @@ export const Route = createFileRoute("/api/media")({
                   ? "Limite de geração de imagens da OpenAI atingido. Tente novamente mais tarde."
                   : "A OpenAI não conseguiu gerar esta imagem. Verifique o acesso ao modelo e o faturamento da API." }, { status: response.status === 429 ? 429 : 502 });
               }
+              await gate.recordUsage("media-image", { inputTokens: 0, outputTokens: 0 });
               return Response.json({ url: `data:image/png;base64,${image}`, mediaType: "image", provider: "openai" });
             } catch (error) {
               console.error("OpenAI image request failed", error);
@@ -116,6 +117,7 @@ export const Route = createFileRoute("/api/media")({
                 { status: response.status === 429 ? 429 : 502 },
               );
             }
+            await gate.recordUsage("media-image", { inputTokens: 0, outputTokens: 0 });
             return Response.json({ url: `data:image/jpeg;base64,${image}`, mediaType: "image" });
           } catch (error) {
             console.error("Cloudflare image request failed", error);
@@ -152,6 +154,7 @@ export const Route = createFileRoute("/api/media")({
                 { status: 502 },
               );
             }
+            await gate.recordUsage("media-video", { inputTokens: 0, outputTokens: 0 });
             return Response.json({ requestId: data.request_id });
           }
 
