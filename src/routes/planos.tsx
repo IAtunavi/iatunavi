@@ -100,7 +100,7 @@ function PlanosPage() {
         {settingsQuery.isError && <p className="mt-2 text-[10px] text-lav/40">Exibindo preços padrão; não foi possível atualizar as configurações.</p>}
       </header>
 
-      <section className="relative grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <section className="relative grid grid-cols-1 gap-5 sm:grid-cols-3">
         {cards.map(card => {
           const current = activeTier === card.tier;
           const isDisabled = card.tier === "free" ? activeTier !== "free" : card.tier === "pro" ? activeTier === "pro" || activeTier === "ultra" : activeTier === "ultra";
