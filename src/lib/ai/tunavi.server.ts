@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { canUse, effectiveTier, limitsFor, requiredTier } from "@/lib/plans";
 
 export const contextSchema = z.object({
   agent: z.string().max(40).nullish(),
@@ -22,6 +23,9 @@ type Settings = {
   free_max_tokens: number;
   pro_max_tokens: number;
   pro_modules: string[];
+  ultra_daily_limit: number;
+  ultra_max_tokens: number;
+  ultra_modules: string[];
 };
 
 function json(status: number, error: string) {
@@ -51,16 +55,24 @@ export async function gateAiRequest(request: Request, module: string, requirePro
   if (authError || !authData.user) return { error: json(401, "Sua sessão expirou. Entre novamente para continuar.") };
   const userId = authData.user.id;
 
-  const [{ data: isPro }, { data: isAdmin }] = await Promise.all([
-    supabaseAdmin.rpc("is_pro", { _user_id: userId }),
+  const [{ data: plan }, { data: isAdmin }] = await Promise.all([
+    supabaseAdmin.rpc("current_plan", { _user_id: userId }),
     supabaseAdmin.rpc("has_role", { _user_id: userId, _role: "admin" }),
   ]);
-  const proAccess = !!isPro || !!isAdmin;
-  const proModules = Array.isArray(data.pro_modules) ? data.pro_modules as string[] : [];
-  if (!proAccess && proModules.includes(module)) return { error: json(402, "Este recurso é exclusivo do TUNAVI Pro. Veja os planos para liberar.") };
-
-  settings.daily_message_limit = proAccess ? settings.pro_daily_limit : settings.free_daily_limit;
-  settings.max_output_tokens = Math.min(settings.max_output_tokens, proAccess ? settings.pro_max_tokens : settings.free_max_tokens);
+  const tier = effectiveTier(plan as string | null, !!isAdmin);
+  const planSettings = {
+    ...settings,
+    pro_modules: Array.isArray(data.pro_modules) ? data.pro_modules as string[] : [],
+    ultra_modules: Array.isArray(data.ultra_modules) ? data.ultra_modules as string[] : [],
+  };
+  if (!canUse(tier, module, planSettings)) {
+    const need = requiredTier(module, planSettings) === "ultra" ? "Ultra" : "Pro";
+    return { error: json(402, `Este recurso é exclusivo do TUNAVI ${need}. Veja os planos para liberar.`) };
+  }
+  const proAccess = tier !== "free";
+  const lim = limitsFor(tier, planSettings);
+  settings.daily_message_limit = lim.daily;
+  settings.max_output_tokens = Math.min(Math.max(settings.max_output_tokens, lim.tokens), lim.tokens);
   const allowedOpenAiModels = ["gpt-4o", "gpt-4o-mini", "gpt-4-turbo"];
   const configuredFreeModel = settings.modules["__ai_free_model"];
   const configuredProModel = settings.modules["__ai_pro_model"];
@@ -80,7 +92,7 @@ export async function gateAiRequest(request: Request, module: string, requirePro
     });
     if (insertError) console.error("ai_usage insert failed", insertError.message);
   };
-  return { apiKey, provider, model, settings, userId, recordUsage };
+  return { apiKey, provider, model, settings, userId, tier, recordUsage };
 }
 
 export function buildInstructions(settings: { system_prompt: string }, ctx: ChatContext, extra?: string) {

@@ -63,6 +63,11 @@ export type Database = {
           pro_price_yearly: number
           system_prompt: string
           trial_days: number
+          ultra_daily_limit: number
+          ultra_max_tokens: number
+          ultra_modules: Json
+          ultra_price_monthly: number
+          ultra_price_yearly: number
           updated_at: string
           updated_by: string | null
         }
@@ -84,6 +89,11 @@ export type Database = {
           pro_price_yearly?: number
           system_prompt?: string
           trial_days?: number
+          ultra_daily_limit?: number
+          ultra_max_tokens?: number
+          ultra_modules?: Json
+          ultra_price_monthly?: number
+          ultra_price_yearly?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -105,6 +115,11 @@ export type Database = {
           pro_price_yearly?: number
           system_prompt?: string
           trial_days?: number
+          ultra_daily_limit?: number
+          ultra_max_tokens?: number
+          ultra_modules?: Json
+          ultra_price_monthly?: number
+          ultra_price_yearly?: number
           updated_at?: string
           updated_by?: string | null
         }
@@ -226,6 +241,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      current_plan: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

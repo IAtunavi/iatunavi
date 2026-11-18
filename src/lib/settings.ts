@@ -21,6 +21,11 @@ export type AppSettings = {
   pro_max_tokens: number;
   trial_days: number;
   pro_modules: ModuleKey[];
+  ultra_price_monthly: number;
+  ultra_price_yearly: number;
+  ultra_daily_limit: number;
+  ultra_max_tokens: number;
+  ultra_modules: ModuleKey[];
 };
 
 export const AI_MODELS: { id: string; label: string; note: string }[] = [
@@ -38,7 +43,7 @@ export function useAppSettings() {
     queryFn: async (): Promise<AppSettings> => {
       const { data, error } = await supabase.from("app_settings").select("*").eq("id", 1).single();
       if (error) throw error;
-      return { ...data, modules: (data.modules ?? {}) as AppSettings["modules"], pro_modules: (Array.isArray(data.pro_modules) ? data.pro_modules : []) as ModuleKey[] };
+      return { ...data, modules: (data.modules ?? {}) as AppSettings["modules"], pro_modules: (Array.isArray(data.pro_modules) ? data.pro_modules : []) as ModuleKey[], ultra_modules: (Array.isArray(data.ultra_modules) ? data.ultra_modules : []) as ModuleKey[] };
     },
     staleTime: 30_000,
   });
