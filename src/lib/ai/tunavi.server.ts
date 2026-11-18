@@ -32,8 +32,9 @@ function json(status: number, error: string) {
 export async function gateAiRequest(request: Request, module: string, requireProviderKey = true) {
   const openAiKey = process.env["OPENAI_API_KEY"]?.trim();
   const lovableKey = process.env["LOVABLE_API_KEY"]?.trim();
-  const provider = openAiKey ? "openai" as const : "lovable" as const;
-  const apiKey = openAiKey || lovableKey || "";
+  const groqKey = process.env["GROQ_API_KEY"]?.trim();
+  const provider = groqKey ? "groq" as const : openAiKey ? "openai" as const : "lovable" as const;
+  const apiKey = groqKey || openAiKey || lovableKey || "";
   if (requireProviderKey && !apiKey) return { error: json(500, "A IA ainda não está configurada. Configure OPENAI_API_KEY ou LOVABLE_API_KEY nos secrets do servidor.") };
 
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -65,7 +66,7 @@ export async function gateAiRequest(request: Request, module: string, requirePro
   const configuredProModel = settings.modules["__ai_pro_model"];
   const freeModel = typeof configuredFreeModel === "string" && allowedOpenAiModels.includes(configuredFreeModel) ? configuredFreeModel : "gpt-4o-mini";
   const proModel = typeof configuredProModel === "string" && allowedOpenAiModels.includes(configuredProModel) ? configuredProModel : "gpt-4o";
-  const model = provider === "openai" ? (proAccess ? proModel : freeModel) : settings.active_model;
+  const model = provider === "groq" ? "openai/gpt-oss-120b" : provider === "openai" ? (proAccess ? proModel : freeModel) : settings.active_model;
 
   const since = new Date();
   since.setUTCHours(0, 0, 0, 0);

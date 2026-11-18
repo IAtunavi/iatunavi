@@ -21,12 +21,13 @@ export const tunaviTools = {
 
 export const GATEWAY_URL = "https://ai.gateway.lovable.dev/v1";
 const OPENAI_URL = "https://api.openai.com/v1";
+const GROQ_URL = "https://api.groq.com/openai/v1";
 
 export function createResponsesCall(
   request: Request,
   config: {
     apiKey: string;
-    provider?: "openai" | "lovable";
+    provider?: "openai" | "lovable" | "groq";
     model: string;
     maxOutputTokens?: number;
     onUsage?: (usage: { inputTokens: number; outputTokens: number }) => Promise<void> | void;
@@ -34,10 +35,11 @@ export function createResponsesCall(
   messages: ModelMessage[],
   instructions?: string,
 ) {
-  const useOpenAI = config.provider === "openai";
+  const useGroq = config.provider === "groq";
+  const useOpenAI = config.provider === "openai" || useGroq;
   const runIdFetch = useOpenAI ? undefined : createLovableAiGatewayRunIdFetch(getLovableAiGatewayRunId(request));
   const provider = createOpenAI({
-    baseURL: useOpenAI ? OPENAI_URL : GATEWAY_URL,
+    baseURL: useGroq ? GROQ_URL : useOpenAI ? OPENAI_URL : GATEWAY_URL,
     apiKey: config.apiKey,
     ...(!useOpenAI ? {
       headers: { "Lovable-API-Key": config.apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
@@ -45,7 +47,7 @@ export function createResponsesCall(
     } : {}),
   });
   const result = streamText({
-    model: provider.responses(config.model),
+    model: useGroq ? provider.chat(config.model) : provider.responses(config.model),
     ...(instructions ? { instructions } : {}),
     messages,
     tools: tunaviTools as unknown as ToolSet,
