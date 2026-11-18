@@ -6,7 +6,7 @@ function safeEqualHex(a: string, b: string): boolean {
   const right = new Uint8Array(b.match(/.{2}/g)!.map((v) => Number.parseInt(v, 16)));
   if (left.length !== right.length) return false;
   let diff = 0;
-  for (let i = 0; i < left.length; i++) diff |= left[i] ^ right[i];
+  for (let i = 0; i < left.length; i++) diff |= (left[i] ?? 0) ^ (right[i] ?? 0);
   return diff === 0;
 }
 
@@ -17,8 +17,8 @@ async function verifySignature(request: Request, dataId: string, secret: string)
     const [key, ...value] = part.trim().split("=");
     return [key, value.join("=")];
   }));
-  const timestamp = parts.ts;
-  const received = parts.v1;
+  const timestamp = parts["ts"];
+  const received = parts["v1"];
   if (!timestamp || !received || !requestId || !dataId) return false;
   const manifest = `id:${dataId.toLowerCase()};request-id:${requestId};ts:${timestamp};`;
   const encoder = new TextEncoder();
@@ -87,7 +87,7 @@ export const Route = createFileRoute("/api/billing/webhook")({
         const reference = subscription.external_reference ?? "";
         const [userId, plan, cycle] = reference.split(":");
         if (!userId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(userId)
-          || !["pro", "ultra"].includes(plan ?? "") || !["monthly", "yearly"].includes(cycle ?? "")) {
+          || (plan !== "pro" && plan !== "ultra") || (cycle !== "monthly" && cycle !== "yearly")) {
           console.error("[billing webhook] Referência externa inválida.");
           return Response.json({ error: "Referência externa inválida." }, { status: 422 });
         }
