@@ -67,7 +67,7 @@ function PlanosPage() {
   const activeTier = plan.tier;
   const savings = useMemo(() => {
     const monthly = settings.pro_price_monthly * 12;
-    return monthly > 0 ? Math.round((1 - settings.pro_price_yearly / monthly) * 100) : 0;
+    return monthly > 0 ? Math.floor((1 - settings.pro_price_yearly / monthly) * 100) : 0;
   }, [settings.pro_price_monthly, settings.pro_price_yearly]);
   const price = (tier: "pro" | "ultra") => cycle === "mensal"
     ? settings[tier === "pro" ? "pro_price_monthly" : "ultra_price_monthly"]
