@@ -95,7 +95,7 @@ export const Route = createFileRoute("/api/billing/webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: current, error: readError } = await supabaseAdmin
           .from("subscriptions")
-          .select("mercadopago_subscription_id,updated_at,plan,status")
+          .select("mercadopago_subscription_id,updated_at,plan,status,current_period_end")
           .eq("user_id", userId)
           .maybeSingle();
         if (readError) {
@@ -105,10 +105,15 @@ export const Route = createFileRoute("/api/billing/webhook")({
 
         if (current?.mercadopago_subscription_id && current.mercadopago_subscription_id !== subscription.id) {
           const tierRank = (value: string | null | undefined) => value === "ultra" ? 2 : value === "pro" ? 1 : 0;
-          const currentStillActive = ["active", "authorized", "trialing"].includes(current.status ?? "");
+          const currentStillActive = ["active", "authorized", "trialing"].includes(current.status ?? "")
+            && (!current.current_period_end || Date.parse(current.current_period_end) > Date.now());
           const isUpgrade = tierRank(plan) > tierRank(current.plan);
           const isReplacementAfterEnd = !currentStillActive;
-          // Allow a higher tier or a replacement after cancellation; never let a stale lower-tier event downgrade the account.
+          // Keep an existing paid tier until the upgrade is actually authorized.
+          if (currentStillActive && isUpgrade && subscription.status !== "authorized") {
+            return Response.json({ received: true, ignored: "upgrade_not_authorized_yet" });
+          }
+          // Never let a stale lower-tier event downgrade a newer subscription.
           if (!isUpgrade && !isReplacementAfterEnd) {
             return Response.json({ received: true, ignored: "superseded_subscription" });
           }
@@ -119,6 +124,7 @@ export const Route = createFileRoute("/api/billing/webhook")({
           pending: "pending",
           paused: "paused",
           cancelled: "canceled",
+          canceled: "canceled",
         };
         const status = statusMap[subscription.status ?? ""] ?? "pending";
         const nextPayment = subscription.next_payment_date && Number.isFinite(Date.parse(subscription.next_payment_date))
