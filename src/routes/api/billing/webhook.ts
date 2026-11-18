@@ -95,7 +95,7 @@ export const Route = createFileRoute("/api/billing/webhook")({
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
         const { data: current, error: readError } = await supabaseAdmin
           .from("subscriptions")
-          .select("mercadopago_subscription_id,updated_at")
+          .select("mercadopago_subscription_id,updated_at,plan,status")
           .eq("user_id", userId)
           .maybeSingle();
         if (readError) {
@@ -104,8 +104,14 @@ export const Route = createFileRoute("/api/billing/webhook")({
         }
 
         if (current?.mercadopago_subscription_id && current.mercadopago_subscription_id !== subscription.id) {
-          // Do not let an old subscription webhook replace a newer subscription.
-          return Response.json({ received: true, ignored: "superseded_subscription" });
+          const tierRank = (value: string | null | undefined) => value === "ultra" ? 2 : value === "pro" ? 1 : 0;
+          const currentStillActive = ["active", "authorized", "trialing"].includes(current.status ?? "");
+          const isUpgrade = tierRank(plan) > tierRank(current.plan);
+          const isReplacementAfterEnd = !currentStillActive;
+          // Allow a higher tier or a replacement after cancellation; never let a stale lower-tier event downgrade the account.
+          if (!isUpgrade && !isReplacementAfterEnd) {
+            return Response.json({ received: true, ignored: "superseded_subscription" });
+          }
         }
 
         const statusMap: Record<string, string> = {
